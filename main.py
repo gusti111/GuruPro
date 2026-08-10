@@ -1,7 +1,7 @@
 import sys
 import os
-from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox, QButtonGroup
-from PyQt6.QtGui import QIcon 
+from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox, QButtonGroup, QLabel
+from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.uic import loadUi
 from PyQt6.QtCore import Qt, QTimer 
 
@@ -40,12 +40,39 @@ class LoginWindow(QMainWindow):
         ui_path = resource_path(os.path.join("ui", "ui_login.ui"))
         loadUi(ui_path, self)
         
-        # [UPDATE] Set Icon Aplikasi (Pastikan file ada di folder asset)
+        # Set Icon Aplikasi
         try:
             icon_path = resource_path(os.path.join("asset", "logo.ico"))
             self.setWindowIcon(QIcon(icon_path))
         except:
             pass
+
+        # [UPDATE] Tambahkan Logo di bawah tulisan GURU PRO dengan Smooth Transformation (Agar Tidak Burem)
+        try:
+            self.lblLogo = QLabel(self.cardLogin)
+            
+            # Prioritaskan logo.png jika ada, fallback ke logo.ico
+            logo_rel = os.path.join("asset", "logo.png")
+            if not os.path.exists(resource_path(logo_rel)):
+                logo_rel = os.path.join("asset", "logo.ico")
+                
+            logo_path = resource_path(logo_rel)
+            if os.path.exists(logo_path):
+                pixmap = QPixmap(logo_path)
+                
+                # Gunakan SmoothTransformation agar gambar diperbesar dengan mulus dan tidak pecah
+                scaled_pixmap = pixmap.scaled(
+                    220, 220, 
+                    Qt.AspectRatioMode.KeepAspectRatio, 
+                    Qt.TransformationMode.SmoothTransformation
+                )
+                
+                self.lblLogo.setPixmap(scaled_pixmap)
+                self.lblLogo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                # Sisipkan logo tepat di bawah lblJudul (indeks 1 dalam layout)
+                self.verticalLayout.insertWidget(1, self.lblLogo)
+        except Exception as e:
+            print(f"Gagal memuat logo di halaman login: {e}")
 
         # Sembunyikan password & set icon
         self.inputPass.setEchoMode(self.inputPass.EchoMode.Password)
@@ -62,7 +89,7 @@ class LoginWindow(QMainWindow):
             QMessageBox.warning(self, "Kosong", "NIP dan Password wajib diisi!")
             return
 
-        # [UPDATE] Efek Loading agar User tahu aplikasi sedang bekerja
+        # Efek Loading agar User tahu aplikasi sedang bekerja
         self.setCursor(Qt.CursorShape.WaitCursor)
         self.btnLogin.setText("Memuat...")
         self.btnLogin.setEnabled(False)
@@ -143,7 +170,7 @@ class DashboardWindow(QMainWindow):
         ui_path = resource_path(os.path.join("ui", "ui_main.ui"))
         loadUi(ui_path, self)
         
-        # [UPDATE] Set Icon
+        # Set Icon
         try:
             icon_path = resource_path(os.path.join("asset", "logo.ico"))
             self.setWindowIcon(QIcon(icon_path))
@@ -162,7 +189,7 @@ class DashboardWindow(QMainWindow):
         self.pengaturan_ctrl = PengaturanController(self)
         self.perangkat_ctrl = PerangkatController(self)
 
-        # Setup Awal Per Halaman (Hanya UI, jangan load data berat disini)
+        # Setup Awal Per Halaman
         self.dashboard_ctrl.setup_halaman_dashboard()
         self.kelas_ctrl.setup_halaman_kelas()
         self.mengajar_ctrl.setup_halaman_mengajar()
@@ -170,21 +197,17 @@ class DashboardWindow(QMainWindow):
         self.pengaturan_ctrl.setup_halaman_pengaturan()
         self.perangkat_ctrl.setup_halaman_perangkat()
 
-        # Navigasi Sidebar (Logika Grouping Ada di sini)
+        # Navigasi Sidebar
         self.setup_navigasi()
         
-        # [UPDATE] Lazy Loading:
-        # Pindah ke halaman 0 setelah 100ms agar Window muncul duluan
-        # Ini mencegah aplikasi "Not Responding" saat dibuka
+        # Lazy Loading (Pindah ke halaman 0 setelah 100ms)
         self.btnNavDashboard.setChecked(True)
         QTimer.singleShot(100, lambda: self.pindah_halaman(0))
 
     def setup_navigasi(self):
-        # 1. BUAT GRUP TOMBOL (Agar Eksklusif / Hanya 1 yang aktif)
         self.nav_group = QButtonGroup(self)
         self.nav_group.setExclusive(True)
 
-        # Daftar tombol Navigasi
         nav_buttons = [
             self.btnNavDashboard, 
             self.btnNavKelas, 
@@ -199,12 +222,10 @@ class DashboardWindow(QMainWindow):
             btn.setCheckable(True)        
             btn.setFocusPolicy(Qt.FocusPolicy.NoFocus) 
 
-        # 2. Setup Tombol Keluar
         self.btnNavKeluar.setCheckable(False) 
         self.btnNavKeluar.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.btnNavKeluar.clicked.connect(self.logout)
 
-        # 3. Hubungkan Sinyal Klik Navigasi
         self.btnNavDashboard.clicked.connect(lambda: self.pindah_halaman(0))
         self.btnNavKelas.clicked.connect(lambda: self.pindah_halaman(1))
         self.btnPerangkat.clicked.connect(lambda: self.pindah_halaman(2))
@@ -222,11 +243,8 @@ class DashboardWindow(QMainWindow):
             self.pagePengaturan   # 5
         ]
         
-        # Ganti Halaman StackedWidget
         self.stackedWidget.setCurrentWidget(pages[index])
 
-        # [UPDATE] REFRESH DATA OTOMATIS SAAT PINDAH HALAMAN
-        # Data hanya diambil saat user membuka halaman tersebut (Hemat Memori)
         if index == 0:
             self.dashboard_ctrl.muat_data_dashboard()
         elif index == 1:
@@ -250,7 +268,6 @@ class DashboardWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     
-    # [UPDATE] Set Icon Global untuk Taskbar
     try:
         icon_path = resource_path(os.path.join("asset", "logo.ico"))
         app.setWindowIcon(QIcon(icon_path))

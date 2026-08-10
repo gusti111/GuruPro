@@ -1,17 +1,20 @@
 from PyQt6.QtWidgets import QTableWidgetItem, QHeaderView, QMessageBox, QFileDialog
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
 from backend import database
 from datetime import datetime
 from google.cloud.firestore_v1.base_query import FieldFilter
 import pandas as pd
 import os
+import platform
+import subprocess
 
 # --- LIBRARY PDF (REPORTLAB) ---
 try:
     from reportlab.lib.pagesizes import A4
     from reportlab.lib import colors
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     LIBRARY_PDF_ADA = True
 except ImportError:
     LIBRARY_PDF_ADA = False
@@ -23,12 +26,29 @@ class LaporanController:
 
     def setup_halaman_laporan(self):
         try:
-            # 1. Setup Tabel (UPDATE: Tambah Kolom RATA NILAI)
+            # 1. Setup Tabel (Tambah Kolom RATA NILAI)
             headers = ["NO", "NIS", "NAMA SISWA", "H", "S", "I", "A", "% HADIR", "RATA NILAI"]
             self.main.tableRekap.setColumnCount(len(headers))
             self.main.tableRekap.setHorizontalHeaderLabels(headers)
             
-            # Styling Tabel
+            # Styling Tabel & Warna Teks agar Tidak Abu-abu (Hitam Pekat Profesional)
+            self.main.tableRekap.setStyleSheet("""
+                QTableWidget {
+                    color: #0F172A; 
+                    background-color: #FFFFFF;
+                    gridline-color: #E2E8F0;
+                    selection-background-color: #DBEAFE;
+                    selection-color: #1E40AF;
+                }
+                QHeaderView::section {
+                    background-color: #2563EB;
+                    color: #FFFFFF;
+                    padding: 6px;
+                    font-weight: bold;
+                    border: none;
+                }
+            """)
+            
             header = self.main.tableRekap.horizontalHeader()
             header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch) # Nama melar
             
@@ -45,17 +65,12 @@ class LaporanController:
             # 2. Isi Dropdown Bulan
             self.main.comboLapBulan.clear()
             self.main.comboLapBulan.addItems(["Semua Bulan", "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
-                                              "Juli", "Agustus", "September", "Oktober", "November", "Desember"])
+                                             "Juli", "Agustus", "September", "Oktober", "November", "Desember"])
 
             # 3. KONEKSI TOMBOL
             self.main.btnTampilkan.clicked.connect(self.aksi_tampilkan_laporan)
             self.main.btnExportExcel.clicked.connect(self.aksi_export_excel)
             self.main.btnCetakPDF.clicked.connect(self.aksi_cetak_pdf)
-
-            # 4. Load Data Kelas
-            # [PENTING] DI-COMMENT AGAR TIDAK FREEZE SAAT STARTUP (Lazy Loading)
-            # Data akan dimuat otomatis oleh main.py saat tab Laporan diklik.
-            # self.muat_list_kelas()
 
         except Exception as e:
             print(f"⚠️ Error Setup Laporan: {e}")
@@ -94,9 +109,7 @@ class LaporanController:
         self.main.tableRekap.setRowCount(0)
         
         try:
-            # -------------------------------------------------------
-            # 1. AMBIL MASTER SISWA (Inisialisasi Data)
-            # -------------------------------------------------------
+            # 1. AMBIL MASTER SISWA
             siswa_docs = database.db.collection("kelas").document(id_kelas).collection("siswa").stream()
             
             rekap_siswa = {} 
@@ -104,7 +117,6 @@ class LaporanController:
                 s = doc.to_dict()
                 nis = str(s.get('nis', ''))
                 nama = s.get('nama', 'Tanpa Nama')
-                # Format Data: [H, S, I, A, TotalNilai]
                 rekap_siswa[nis] = {
                     'nama': nama, 
                     'H': 0, 'S': 0, 'I': 0, 'A': 0, 
@@ -113,9 +125,7 @@ class LaporanController:
             
             jumlah_siswa = len(rekap_siswa)
 
-            # -------------------------------------------------------
             # 2. AMBIL DATA ABSENSI & HITUNG
-            # -------------------------------------------------------
             docs = database.db.collection("absensi").where(filter=FieldFilter("id_kelas", "==", id_kelas)).stream()
             total_pertemuan_valid = 0
 
@@ -144,22 +154,18 @@ class LaporanController:
                     nis = str(s.get('nis'))
                     status = s.get('status')
                     
-                    # Ambil nilai (handle jika kosong/string)
                     try: nilai = int(s.get('nilai', 0))
                     except: nilai = 0
 
                     if nis in rekap_siswa:
                         if status == "Hadir": 
                             rekap_siswa[nis]['H'] += 1
-                            # Hanya tambahkan nilai jika hadir
                             rekap_siswa[nis]['total_nilai'] += nilai
                         elif status == "Sakit": rekap_siswa[nis]['S'] += 1
                         elif status == "Izin": rekap_siswa[nis]['I'] += 1
                         elif status == "Alpa": rekap_siswa[nis]['A'] += 1
 
-            # -------------------------------------------------------
             # 3. RENDER TABEL
-            # -------------------------------------------------------
             sorted_nis = sorted(rekap_siswa.keys(), key=lambda x: int(x) if str(x).isdigit() else str(x))
             self.main.tableRekap.setRowCount(len(sorted_nis))
             
@@ -170,20 +176,16 @@ class LaporanController:
             for row, nis in enumerate(sorted_nis):
                 data = rekap_siswa[nis]
                 
-                # Hitung Persentase Kehadiran
                 persen = 0
                 if total_pertemuan_valid > 0:
                     persen = (data['H'] / total_pertemuan_valid) * 100
                 
-                # Hitung Rata-rata Nilai
-                # Rumus: Total Nilai / Jumlah Kehadiran (H)
                 rata_nilai = 0
                 if data['H'] > 0:
                     rata_nilai = data['total_nilai'] / data['H']
 
                 total_hadir_semua += data['H']
                 
-                # Cek Alpa Tertinggi
                 if data['A'] > max_alpa:
                     max_alpa = data['A']
                     if max_alpa > 0:
@@ -191,41 +193,43 @@ class LaporanController:
                     else:
                         nama_alpa_tertinggi = "-"
 
-                # --- ISI SEL TABEL ---
-                # 0-2: Identitas
-                self.main.tableRekap.setItem(row, 0, QTableWidgetItem(str(row+1)))
-                self.main.tableRekap.setItem(row, 1, QTableWidgetItem(str(nis)))
-                self.main.tableRekap.setItem(row, 2, QTableWidgetItem(data['nama']))
+                # ISI SEL TABEL DENGAN QColor PySide6 yang valid
+                item_no = QTableWidgetItem(str(row+1))
+                item_no.setForeground(QColor("#0F172A"))
+                self.main.tableRekap.setItem(row, 0, item_no)
                 
-                # 3-6: H/S/I/A
+                item_nis = QTableWidgetItem(str(nis))
+                item_nis.setForeground(QColor("#0F172A"))
+                self.main.tableRekap.setItem(row, 1, item_nis)
+                
+                item_nama = QTableWidgetItem(data['nama'])
+                item_nama.setForeground(QColor("#0F172A"))
+                self.main.tableRekap.setItem(row, 2, item_nama)
+                
                 for col, key in enumerate(['H', 'S', 'I', 'A']):
                     item = QTableWidgetItem(str(data[key]))
+                    item.setForeground(QColor("#0F172A"))
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     self.main.tableRekap.setItem(row, 3+col, item)
 
-                # 7: Persentase (Warna-warni)
                 item_persen = QTableWidgetItem(f"{persen:.1f}%")
                 item_persen.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                if persen < 50: item_persen.setForeground(Qt.GlobalColor.red)
-                elif persen < 75: item_persen.setForeground(Qt.GlobalColor.darkYellow)
-                else: item_persen.setForeground(Qt.GlobalColor.darkGreen)
+                if persen < 50: item_persen.setForeground(QColor("#EF4444"))
+                elif persen < 75: item_persen.setForeground(QColor("#D97706"))
+                else: item_persen.setForeground(QColor("#059669"))
                 self.main.tableRekap.setItem(row, 7, item_persen)
 
-                # 8: RATA NILAI (BARU!)
                 item_nilai = QTableWidgetItem(f"{rata_nilai:.1f}")
                 item_nilai.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                # Warna nilai (Merah jika di bawah KKM 75)
                 if rata_nilai < 75: 
-                    item_nilai.setForeground(Qt.GlobalColor.red)
+                    item_nilai.setForeground(QColor("#EF4444"))
                     item_nilai.setToolTip("Di bawah KKM")
                 else:
-                    item_nilai.setForeground(Qt.GlobalColor.black)
+                    item_nilai.setForeground(QColor("#0F172A"))
                     
                 self.main.tableRekap.setItem(row, 8, item_nilai)
 
-            # -------------------------------------------------------
-            # 4. UPDATE STATISTIK (Labels)
-            # -------------------------------------------------------
+            # 4. UPDATE STATISTIK
             try:
                 if hasattr(self.main, 'label_9'):
                     self.main.label_9.setText(str(total_pertemuan_valid))
@@ -248,9 +252,6 @@ class LaporanController:
             print(f"Error rekap: {e}")
             QMessageBox.warning(self.main, "Error", "Gagal menghitung rekap.")
 
-    # =========================================================================
-    # FITUR EKSPOR EXCEL (UPDATE: Include Nilai)
-    # =========================================================================
     def aksi_export_excel(self):
         if self.main.tableRekap.rowCount() == 0:
             QMessageBox.warning(self.main, "Kosong", "Tampilkan data terlebih dahulu.")
@@ -262,7 +263,6 @@ class LaporanController:
         if not path: return
 
         try:
-            # Ambil semua kolom termasuk Nilai
             headers = [self.main.tableRekap.horizontalHeaderItem(col).text() for col in range(self.main.tableRekap.columnCount())]
             rows = []
             for row in range(self.main.tableRekap.rowCount()):
@@ -275,13 +275,16 @@ class LaporanController:
             df = pd.DataFrame(rows, columns=headers)
             df.to_excel(path, index=False)
             QMessageBox.information(self.main, "Sukses", f"Data berhasil diekspor ke: {path}")
-            os.startfile(path)
+            
+            if platform.system() == 'Windows':
+                os.startfile(path)
+            elif platform.system() == 'Darwin':
+                subprocess.run(['open', path])
+            else:
+                subprocess.run(['xdg-open', path])
         except Exception as e:
             QMessageBox.critical(self.main, "Error", f"Gagal simpan Excel: {e}")
 
-    # =========================================================================
-    # FITUR CETAK PDF (UPDATE: Include Nilai)
-    # =========================================================================
     def aksi_cetak_pdf(self):
         if not LIBRARY_PDF_ADA:
             QMessageBox.critical(self.main, "Error", "Library 'reportlab' belum diinstall.")
@@ -296,40 +299,94 @@ class LaporanController:
         if not path: return
 
         try:
-            doc = SimpleDocTemplate(path, pagesize=A4)
+            doc = SimpleDocTemplate(
+                path, 
+                pagesize=A4,
+                leftMargin=30, rightMargin=30,
+                topMargin=30, bottomMargin=30
+            )
             elements = []
             styles = getSampleStyleSheet()
 
-            judul = Paragraph(f"<b>Laporan Kehadiran & Nilai Siswa</b>", styles['Title'])
-            elements.append(judul)
-            subjudul = Paragraph(f"Kelas: {nama_kelas}<br/>Bulan: {self.main.comboLapBulan.currentText()}", styles['Normal'])
-            elements.append(subjudul)
-            elements.append(Spacer(1, 20))
+            # Styling Teks PDF agar Hitam Pekat & Jelas Terbaca
+            style_title = ParagraphStyle(
+                'TitleStyle',
+                parent=styles['Title'],
+                fontName='Helvetica-Bold',
+                fontSize=16,
+                leading=20,
+                textColor=colors.HexColor("#0F172A")
+            )
 
-            # Header PDF: Tambahkan 'NILAI'
-            data_tabel = [["NO", "NIS", "NAMA SISWA", "H", "S", "I", "A", "%", "NILAI"]]
+            style_subjudul = ParagraphStyle(
+                'SubStyle',
+                parent=styles['Normal'],
+                fontName='Helvetica-Bold',
+                fontSize=10,
+                leading=14,
+                textColor=colors.HexColor("#334155")
+            )
+
+            style_normal = ParagraphStyle(
+                'NormalStyle',
+                parent=styles['Normal'],
+                fontSize=8,
+                leading=10,
+                textColor=colors.HexColor("#0F172A")
+            )
+
+            style_header = ParagraphStyle(
+                'HeaderStyle',
+                parent=styles['Normal'],
+                fontSize=8,
+                leading=10,
+                fontName='Helvetica-Bold',
+                textColor=colors.whitesmoke
+            )
+
+            judul = Paragraph("<b>Laporan Kehadiran & Nilai Siswa</b>", style_title)
+            elements.append(judul)
+            
+            subjudul_teks = f"Kelas: {nama_kelas}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;Bulan: {self.main.comboLapBulan.currentText()}"
+            subjudul = Paragraph(subjudul_teks, style_subjudul)
+            elements.append(subjudul)
+            elements.append(Spacer(1, 15))
+
+            raw_headers = ["NO", "NIS", "NAMA SISWA", "H", "S", "I", "A", "%", "NILAI"]
+            data_tabel = [[Paragraph(h, style_header) for h in raw_headers]]
             
             for row in range(self.main.tableRekap.rowCount()):
                 baris = []
                 for col in range(self.main.tableRekap.columnCount()):
                     item = self.main.tableRekap.item(row, col)
-                    baris.append(item.text() if item else "")
+                    text = item.text() if item else ""
+                    baris.append(Paragraph(text, style_normal))
                 data_tabel.append(baris)
 
-            tabel_pdf = Table(data_tabel)
-            style = TableStyle([
+            col_widths = [25, 55, 175, 30, 30, 30, 30, 45, 55]
+
+            tabel_pdf = Table(data_tabel, colWidths=col_widths)
+            style_tabel = TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#2563EB")),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                ('FONTSIZE', (0, 0), (-1, -1), 8), # Perkecil font agar muat
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
             ])
-            tabel_pdf.setStyle(style)
+            tabel_pdf.setStyle(style_tabel)
             elements.append(tabel_pdf)
+            
             doc.build(elements)
             
             QMessageBox.information(self.main, "Sukses", f"PDF berhasil dibuat!\nLokasi: {path}")
-            os.startfile(path)
+            
+            if platform.system() == 'Windows':
+                os.startfile(path)
+            elif platform.system() == 'Darwin':
+                subprocess.run(['open', path])
+            else:
+                subprocess.run(['xdg-open', path])
+
         except Exception as e:
             QMessageBox.critical(self.main, "Gagal", f"Gagal membuat PDF: {e}")

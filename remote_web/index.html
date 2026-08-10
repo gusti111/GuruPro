@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GuruPro Mobile</title>
-    
+
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/png" href="./logo.png" sizes="32x32">
     <link rel="apple-touch-icon" sizes="180x180" href="./logo.png">
@@ -17,89 +18,535 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js" defer></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
     <style>
-        :root { --primary: #2563EB; --bg: #F8FAFC; --card: #FFFFFF; --text: #0F172A; --muted: #64748B; --h: 70px; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color:transparent; }
-        body { background: var(--bg); color: var(--text); padding-top: calc(var(--h) + 20px); padding-bottom: 100px; overflow-x: hidden; user-select: none; }
+        :root {
+            --primary: #2563EB;
+            --bg: #F8FAFC;
+            --card: #FFFFFF;
+            --text: #0F172A;
+            --muted: #64748B;
+            --h: 70px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            padding-top: calc(var(--h) + 20px);
+            padding-bottom: 100px;
+            overflow-x: hidden;
+            user-select: none;
+        }
 
         /* LOADING SPINNER */
-        #initial-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #E2E8F0; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #initial-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s;
+        }
 
-        header { position: fixed; top: 0; left: 0; right: 0; height: var(--h); background: rgba(255,255,255,0.98); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1000; border-bottom: 1px solid #E2E8F0; box-shadow: 0 4px 15px -5px rgba(0,0,0,0.05); }
-        .brand { font-size: 19px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; }
-        .logo-app { height: 36px; width: auto; object-fit: contain; }
-        .badge { font-size: 11px; font-weight: 700; background: #EFF6FF; color: var(--primary); padding: 6px 12px; border-radius: 20px; border: 1px solid #BFDBFE; }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #E2E8F0;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
 
-        .page { display: none; padding: 0 20px; animation: up 0.4s ease-out; }
-        .page.active { display: block; }
-        @keyframes up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
 
-        .card { background: var(--card); border-radius: 24px; padding: 24px; margin-bottom: 16px; box-shadow: 0 4px 20px -5px rgba(0,0,0,0.03); border: 1px solid #F1F5F9; }
-        .welcome-card { background: linear-gradient(135deg, var(--primary), #1E40AF); color: white; border: none; }
-        
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
-        .stat-item { background: rgba(255,255,255,0.15); padding: 15px; border-radius: 16px; text-align: center; }
-        .stat-val { font-size: 22px; font-weight: 800; }
-        .stat-lbl { font-size: 11px; opacity: 0.9; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
 
-        .class-item { background: white; border-radius: 20px; padding: 22px; margin-bottom: 16px; border: 1px solid #E2E8F0; display: flex; flex-direction: column; gap: 15px; transition: 0.2s; position: relative; }
-        .class-item:active { transform: scale(0.98); background: #F8FAFC; }
-        .class-head { display: flex; justify-content: space-between; align-items: flex-start; }
-        .meta-tag { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted); background: #F1F5F9; padding: 8px 14px; border-radius: 10px; }
-        .meta-tag.active { color: #10B981; background: #ECFDF5; }
-        .btn-arr { position: absolute; right: 20px; top: 20px; background: #F8FAFC; color: var(--muted); border: 1px solid #E2E8F0; width: 45px; height: 45px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--h);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+            border-bottom: 1px solid #E2E8F0;
+            box-shadow: 0 4px 15px -5px rgba(0, 0, 0, 0.05);
+        }
 
-        .form-head { position: sticky; top: var(--h); background: var(--bg); z-index: 900; padding: 10px 0 20px; }
-        .inp-grp { background: white; border: 1px solid #E2E8F0; border-radius: 18px; padding: 18px; margin-bottom: 15px; }
-        .inp-grp label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
-        .inp-grp input { width: 100%; border: none; font-size: 16px; font-weight: 600; outline: none; color: var(--text); background: transparent; }
-        
-        .meet-ctrl { display: flex; align-items: center; justify-content: space-between; background: white; padding: 8px; border-radius: 18px; border: 1px solid #E2E8F0; margin-bottom: 20px; }
-        .btn-icon { width: 48px; height: 48px; border: none; background: #F1F5F9; border-radius: 14px; font-size: 22px; color: var(--text); }
-        
-        .st-item { background: white; border-radius: 18px; padding: 20px; margin-bottom: 14px; border: 1px solid #E2E8F0; }
-        .st-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .st-act { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .radio-box input { display: none; }
-        .radio-box label { display: flex; align-items: center; justify-content: center; height: 48px; border-radius: 12px; background: #F8FAFC; color: var(--muted); font-weight: 800; font-size: 14px; border: 1px solid #E2E8F0; transition: 0.2s; }
-        
-        .radio-box input[value="Hadir"]:checked + label { background: #DCFCE7; color: #15803D; border-color: #86EFAC; }
-        .radio-box input[value="Sakit"]:checked + label { background: #FEF3C7; color: #B45309; border-color: #FCD34D; }
-        .radio-box input[value="Izin"]:checked + label { background: #DBEAFE; color: #1E40AF; border-color: #93C5FD; }
-        .radio-box input[value="Alpa"]:checked + label { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+        .brand {
+            font-size: 19px;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-        .score-inp { margin-top: 15px; display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed #E2E8F0; padding-top: 15px; }
-        .score-inp input { width: 80px; padding: 10px; border-radius: 10px; border: 1px solid #E2E8F0; text-align: center; font-weight: 700; font-size: 16px; outline: none; background: #F8FAFC; }
+        .logo-app {
+            height: 36px;
+            width: auto;
+            object-fit: contain;
+        }
 
-        .fab { position: fixed; bottom: 100px; left: 20px; right: 20px; z-index: 900; }
-        .btn-main { width: 100%; background: var(--text); color: white; padding: 18px; border: none; border-radius: 18px; font-weight: 800; font-size: 16px; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25); display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-main:disabled { background: #94A3B8; box-shadow: none; }
+        .badge {
+            font-size: 11px;
+            font-weight: 700;
+            background: #EFF6FF;
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid #BFDBFE;
+        }
 
-        .nav { position: fixed; bottom: 0; left: 0; right: 0; height: 80px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #E2E8F0; z-index: 1000; border-radius: 24px 24px 0 0; padding-bottom: 10px; box-shadow: 0 -5px 20px rgba(0,0,0,0.03); }
-        .nav-i { border: none; background: none; color: #94A3B8; display: flex; flex-direction: column; align-items: center; font-size: 11px; font-weight: 600; width: 33%; gap: 6px; transition: 0.2s; }
-        .nav-i i { font-size: 26px; }
-        .nav-i.active { color: var(--primary); transform: translateY(-4px); }
+        .page {
+            display: none;
+            padding: 0 20px;
+            animation: up 0.4s ease-out;
+        }
 
-        .prof-img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 5px solid white; box-shadow: 0 10px 30px rgba(37,99,235,0.2); margin: 0 auto 15px; display: block; }
-        .prof-row { display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid #F1F5F9; font-size: 14px; }
+        .page.active {
+            display: block;
+        }
 
-        #ov { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px; }
-        
-        /* Tombol Install (Disembunyikan default) */
-        #install-btn-container { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 1100; }
-        .btn-install { background: #10B981; color: white; padding: 10px 20px; border-radius: 50px; font-weight: bold; border: none; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); display: flex; align-items: center; gap: 8px; }
+        @keyframes up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
 
-        /* TOAST NOTIFICATION */
-        #toast { visibility: hidden; min-width: 250px; background-color: #0F172A; color: #fff; text-align: center; border-radius: 50px; padding: 16px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s, bottom 0.3s; font-weight: 600; }
-        #toast.show { visibility: visible; opacity: 1; bottom: 40px; }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.03);
+            border: 1px solid #F1F5F9;
+        }
+
+        .welcome-card {
+            background: linear-gradient(135deg, var(--primary), #1E40AF);
+            color: white;
+            border: none;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .stat-lbl {
+            font-size: 11px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        .class-item {
+            background: white;
+            border-radius: 20px;
+            padding: 22px;
+            margin-bottom: 16px;
+            border: 1px solid #E2E8F0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transition: 0.2s;
+            position: relative;
+        }
+
+        .class-item:active {
+            transform: scale(0.98);
+            background: #F8FAFC;
+        }
+
+        .class-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .meta-tag {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+            background: #F1F5F9;
+            padding: 8px 14px;
+            border-radius: 10px;
+        }
+
+        .meta-tag.active {
+            color: #10B981;
+            background: #ECFDF5;
+        }
+
+        .btn-arr {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            background: #F8FAFC;
+            color: var(--muted);
+            border: 1px solid #E2E8F0;
+            width: 45px;
+            height: 45px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .form-head {
+            position: sticky;
+            top: var(--h);
+            background: var(--bg);
+            z-index: 900;
+            padding: 10px 0 20px;
+        }
+
+        .inp-grp {
+            background: white;
+            border: 1px solid #E2E8F0;
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 15px;
+        }
+
+        .inp-grp label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .inp-grp input {
+            width: 100%;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            outline: none;
+            color: var(--text);
+            background: transparent;
+        }
+
+        .meet-ctrl {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 8px;
+            border-radius: 18px;
+            border: 1px solid #E2E8F0;
+            margin-bottom: 20px;
+        }
+
+        .btn-icon {
+            width: 48px;
+            height: 48px;
+            border: none;
+            background: #F1F5F9;
+            border-radius: 14px;
+            font-size: 22px;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .st-item {
+            background: white;
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 14px;
+            border: 1px solid #E2E8F0;
+        }
+
+        .st-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .st-act {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .radio-box input {
+            display: none;
+        }
+
+        .radio-box label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 48px;
+            border-radius: 12px;
+            background: #F8FAFC;
+            color: var(--muted);
+            font-weight: 800;
+            font-size: 14px;
+            border: 1px solid #E2E8F0;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+
+        .radio-box input[value="Hadir"]:checked+label {
+            background: #DCFCE7;
+            color: #15803D;
+            border-color: #86EFAC;
+        }
+
+        .radio-box input[value="Sakit"]:checked+label {
+            background: #FEF3C7;
+            color: #B45309;
+            border-color: #FCD34D;
+        }
+
+        .radio-box input[value="Izin"]:checked+label {
+            background: #DBEAFE;
+            color: #1E40AF;
+            border-color: #93C5FD;
+        }
+
+        .radio-box input[value="Alpa"]:checked+label {
+            background: #FEE2E2;
+            color: #991B1B;
+            border-color: #FCA5A5;
+        }
+
+        .score-inp {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px dashed #E2E8F0;
+            padding-top: 15px;
+        }
+
+        .score-inp input {
+            width: 80px;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #E2E8F0;
+            text-align: center;
+            font-weight: 700;
+            font-size: 16px;
+            outline: none;
+            background: #F8FAFC;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 100px;
+            left: 20px;
+            right: 20px;
+            z-index: 900;
+        }
+
+        .btn-main {
+            width: 100%;
+            background: var(--text);
+            color: white;
+            padding: 18px;
+            border: none;
+            border-radius: 18px;
+            font-weight: 800;
+            font-size: 16px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .btn-main:disabled {
+            background: #94A3B8;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #E2E8F0;
+            z-index: 1000;
+            border-radius: 24px 24px 0 0;
+            padding-bottom: 10px;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.03);
+        }
+
+        .nav-i {
+            border: none;
+            background: none;
+            color: #94A3B8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            width: 33%;
+            gap: 6px;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-i i {
+            font-size: 26px;
+        }
+
+        .nav-i.active {
+            color: var(--primary);
+            transform: translateY(-4px);
+        }
+
+        .prof-img {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid white;
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
+            margin: 0 auto 15px;
+            display: block;
+        }
+
+        .prof-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 16px 0;
+            border-bottom: 1px solid #F1F5F9;
+            font-size: 14px;
+        }
+
+        #ov {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        #install-btn-container {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1100;
+        }
+
+        .btn-install {
+            background: #10B981;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            border: none;
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #0F172A;
+            color: #fff;
+            text-align: center;
+            border-radius: 50px;
+            padding: 16px;
+            position: fixed;
+            z-index: 2000;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+            font-weight: 600;
+        }
+
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 40px;
+        }
     </style>
 </head>
+
 <body>
 
     <div id="initial-loader">
@@ -120,18 +567,27 @@
                 <h2 id="w-name">Halo!</h2>
                 <p id="w-job">Menyiapkan data...</p>
                 <div class="stat-grid">
-                    <div class="stat-item"><div class="stat-val" id="clock">00:00</div><div class="stat-lbl">Waktu</div></div>
-                    <div class="stat-item" onclick="nav('p-kelas')"><div class="stat-val" id="t-kelas">0</div><div class="stat-lbl">Kelas</div></div>
+                    <div class="stat-item">
+                        <div class="stat-val" id="clock">00:00</div>
+                        <div class="stat-lbl">Waktu</div>
+                    </div>
+                    <div class="stat-item" onclick="nav('p-kelas')" style="cursor:pointer;">
+                        <div class="stat-val" id="t-kelas">0</div>
+                        <div class="stat-lbl">Kelas</div>
+                    </div>
                 </div>
             </div>
             <h3 style="font-size: 17px; font-weight: 800; margin: 30px 0 15px;">Akses Cepat</h3>
-            <div id="quick-list"><p style="color:#94A3B8; font-size:13px;">Memuat...</p></div>
+            <div id="quick-list">
+                <p style="color:#94A3B8; font-size:13px;">Memuat...</p>
+            </div>
         </section>
 
         <section id="p-kelas" class="page">
             <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 20px;">Daftar Kelas</h3>
             <div id="cls-list">
-                <div style="text-align:center; padding:40px; color:#94A3B8;"><i class="ri-loader-4-line ri-spin" style="font-size:30px;"></i></div>
+                <div style="text-align:center; padding:40px; color:#94A3B8;"><i class="ri-loader-4-line ri-spin"
+                        style="font-size:30px;"></i></div>
             </div>
         </section>
 
@@ -139,37 +595,55 @@
             <div class="form-head">
                 <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
                     <button onclick="nav('p-kelas')" class="btn-icon"><i class="ri-arrow-left-s-line"></i></button>
-                    <h3 id="abs-title" style="font-size:20px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Kelas</h3>
+                    <h3 id="abs-title"
+                        style="font-size:20px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        Kelas</h3>
                 </div>
                 <div class="meet-ctrl">
                     <button class="btn-icon" onclick="chMeet(-1)"><i class="ri-subtract-line"></i></button>
-                    <span style="font-size:14px; font-weight:700; color:#64748B;">PERTEMUAN <span id="meet-val" style="color:#2563EB;">1</span></span>
+                    <span style="font-size:14px; font-weight:700; color:#64748B;">PERTEMUAN <span id="meet-val"
+                            style="color:#2563EB;">1</span></span>
                     <button class="btn-icon" onclick="chMeet(1)"><i class="ri-add-line"></i></button>
                 </div>
-                <div class="inp-grp"><label>Materi</label><input type="text" id="i-materi" placeholder="Contoh: Aljabar"></div>
-                <div class="inp-grp" style="margin-bottom:0;"><label>Jurnal</label><input type="text" id="i-catatan" placeholder="Catatan..."></div>
+                <div class="inp-grp"><label>Materi</label><input type="text" id="i-materi"
+                        placeholder="Contoh: Aljabar"></div>
+                <div class="inp-grp" style="margin-bottom:0;"><label>Jurnal</label><input type="text" id="i-catatan"
+                        placeholder="Catatan..."></div>
             </div>
             <div id="stu-list" style="padding-bottom:100px;"></div>
-            <div class="fab"><button id="btn-save" onclick="save()" class="btn-main"><i class="ri-save-3-line"></i> SIMPAN ABSENSI</button></div>
+            <div class="fab"><button id="btn-save" onclick="save()" class="btn-main"><i class="ri-save-3-line"></i>
+                    SIMPAN ABSENSI</button></div>
         </section>
 
         <section id="p-profil" class="page">
             <div style="text-align:center; margin-bottom:30px; padding-top:10px;">
-                <img src="" id="p-img" class="prof-img" loading="lazy" onerror="this.src='https://ui-avatars.com/api/?name=G&background=random'">
+                <img src="" id="p-img" class="prof-img" loading="lazy"
+                    onerror="this.src='https://ui-avatars.com/api/?name=G&background=random'">
                 <h2 id="p-name" style="font-size:24px; font-weight:800;">Guru</h2>
                 <p id="p-job" style="font-size:15px; color:#64748B; font-weight:600;">Jabatan</p>
             </div>
             <div class="stat-grid" style="margin-bottom:30px;">
-                <div class="stat-item" style="background:white; border:1px solid #E2E8F0;"><div class="stat-val" id="s-t-k" style="color:#2563EB;">0</div><div class="stat-lbl" style="color:#64748B;">Total Kelas</div></div>
-                <div class="stat-item" style="background:white; border:1px solid #E2E8F0;"><div class="stat-val" id="s-t-s" style="color:#10B981;">0</div><div class="stat-lbl" style="color:#64748B;">Total Siswa</div></div>
+                <div class="stat-item" style="background:white; border:1px solid #E2E8F0;">
+                    <div class="stat-val" id="s-t-k" style="color:#2563EB;">0</div>
+                    <div class="stat-lbl" style="color:#64748B;">Total Kelas</div>
+                </div>
+                <div class="stat-item" style="background:white; border:1px solid #E2E8F0;">
+                    <div class="stat-val" id="s-t-s" style="color:#10B981;">0</div>
+                    <div class="stat-lbl" style="color:#64748B;">Total Siswa</div>
+                </div>
             </div>
             <div class="card">
                 <h4 style="font-size:17px; margin-bottom:10px; font-weight:800;">Info Akun</h4>
-                <div class="prof-row"><span style="color:#64748B; font-weight:600;">NIP</span><span id="p-nip" style="font-weight:700;">-</span></div>
-                <div class="prof-row" style="border:none;"><span style="color:#64748B; font-weight:600;">Session ID</span><span id="p-sid" style="font-family:monospace; color:#2563EB;">-</span></div>
+                <div class="prof-row"><span style="color:#64748B; font-weight:600;">NIP</span><span id="p-nip"
+                        style="font-weight:700;">-</span></div>
+                <div class="prof-row" style="border:none;"><span style="color:#64748B; font-weight:600;">Session
+                        ID</span><span id="p-sid" style="font-family:monospace; color:#2563EB;">-</span></div>
             </div>
-            <button onclick="logout()" style="width:100%; padding:20px; background:#FEF2F2; color:#DC2626; border:1px solid #FECDD3; border-radius:18px; font-weight:800; font-size:15px; margin-top:15px;">Putus Koneksi</button>
-            <p style="text-align:center; color:#CBD5E1; font-size:12px; margin-top:40px; font-weight:600;">GuruPro v9.0 (Turbo PWA)</p>
+            <button onclick="logout()"
+                style="width:100%; padding:20px; background:#FEF2F2; color:#DC2626; border:1px solid #FECDD3; border-radius:18px; font-weight:800; font-size:15px; margin-top:15px; cursor:pointer;">Putus
+                Koneksi</button>
+            <p style="text-align:center; color:#CBD5E1; font-size:12px; margin-top:40px; font-weight:600;">GuruPro v9.0
+                (Turbo PWA)</p>
         </section>
     </main>
 
@@ -183,7 +657,9 @@
         <i class="ri-wifi-off-line" style="font-size:60px; color:#64748B; margin-bottom:20px;"></i>
         <h3 style="margin-bottom:10px; font-size:22px; font-weight:800;">Koneksi Terputus</h3>
         <p style="color:#64748B; margin-bottom:30px;">Sesi telah berakhir atau Anda belum melakukan Scan QR.</p>
-        <button onclick="resetApp()" style="background:#0F172A; color:white; padding:16px 35px; border:none; border-radius:14px; font-weight:800;">Scan Ulang QR</button>
+        <button onclick="resetApp()"
+            style="background:#0F172A; color:white; padding:16px 35px; border:none; border-radius:14px; font-weight:800; cursor:pointer;">Scan
+            Ulang QR</button>
     </div>
 
     <div id="install-btn-container">
@@ -217,26 +693,26 @@
         }
 
         // 3. FIREBASE CONFIG
-        const firebaseConfig = { 
-            apiKey: "AIzaSy...", 
+        const firebaseConfig = {
+            apiKey: "AIzaSy...",
             authDomain: "gurupro-app-bc6cc.firebaseapp.com",
             projectId: "gurupro-app-bc6cc",
             storageBucket: "gurupro-app-bc6cc.appspot.com",
-            messagingSenderId: "1043...", 
-            appId: "1:1043..." 
+            messagingSenderId: "1043...",
+            appId: "1:1043..."
         };
-        
+
         // DEFER INITIALIZATION
         window.addEventListener('DOMContentLoaded', () => {
-             if (typeof firebase !== 'undefined') { initializeApp(); }
-             else {
-                 let checkFirebase = setInterval(() => {
-                     if (typeof firebase !== 'undefined') {
-                         clearInterval(checkFirebase);
-                         initializeApp();
-                     }
-                 }, 100);
-             }
+            if (typeof firebase !== 'undefined') { initializeApp(); }
+            else {
+                let checkFirebase = setInterval(() => {
+                    if (typeof firebase !== 'undefined') {
+                        clearInterval(checkFirebase);
+                        initializeApp();
+                    }
+                }, 100);
+            }
         });
 
         let db;
@@ -249,7 +725,7 @@
             db = firebase.firestore();
 
             // OFFLINE PERSISTENCE
-            db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+            db.enablePersistence({ synchronizeTabs: true }).catch(() => { });
 
             // SESSION LOGIC
             const urlParams = new URLSearchParams(window.location.search);
@@ -266,7 +742,7 @@
             // HIDE LOADER
             setTimeout(() => {
                 const loader = document.getElementById('initial-loader');
-                if(loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 500); }
+                if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 500); }
             }, 800);
 
             initClock();
@@ -276,12 +752,12 @@
         function initClock() {
             setInterval(() => {
                 const d = new Date();
-                document.getElementById('clock').innerText = d.toLocaleTimeString('id-ID', {hour12: false, hour: '2-digit', minute:'2-digit'});
+                document.getElementById('clock').innerText = d.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit' });
             }, 1000);
         }
 
         function checkSession() {
-            if(!sid) {
+            if (!sid) {
                 document.getElementById('ov').style.display = 'flex';
                 return;
             }
@@ -290,13 +766,13 @@
             setInterval(() => {
                 db.collection("remote_sessions").doc(sid).update({
                     last_update: firebase.firestore.FieldValue.serverTimestamp()
-                }).catch(() => {});
+                }).catch(() => { });
             }, 30000);
 
             db.collection("remote_sessions").doc(sid).onSnapshot(doc => {
-                if(doc.exists) {
+                if (doc.exists) {
                     const d = doc.data();
-                    if(d.status.includes('disconnected')) { logout(true); return; }
+                    if (d.status.includes('disconnected')) { logout(true); return; }
 
                     cNIP = d.nip;
                     const nm = d.nama_guru || "Guru";
@@ -312,7 +788,7 @@
                     loadProf(cNIP);
                     loadCls(cNIP);
 
-                    if(d.status !== 'connected') {
+                    if (d.status !== 'connected') {
                         db.collection("remote_sessions").doc(sid).update({ status: 'connected', connected_device: dv, last_update: firebase.firestore.FieldValue.serverTimestamp() });
                     }
                 } else { logout(true); }
@@ -323,17 +799,17 @@
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             document.querySelectorAll('.nav-i').forEach(n => n.classList.remove('active'));
-            if(id.includes('home')) document.getElementById('n-home').classList.add('active');
-            if(id.includes('kelas')) document.getElementById('n-kelas').classList.add('active');
-            if(id.includes('profil')) document.getElementById('n-profil').classList.add('active');
-            window.scrollTo(0,0);
+            if (id.includes('home')) document.getElementById('n-home').classList.add('active');
+            if (id.includes('kelas')) document.getElementById('n-kelas').classList.add('active');
+            if (id.includes('profil')) document.getElementById('n-profil').classList.add('active');
+            window.scrollTo(0, 0);
         }
 
         async function logout(force = false) {
-            if(force || confirm("Putus koneksi?")) {
+            if (force || confirm("Putus koneksi?")) {
                 try {
-                    if(!force) await db.collection("remote_sessions").doc(sid).update({ status: "disconnected" });
-                } catch(e) {}
+                    if (!force) await db.collection("remote_sessions").doc(sid).update({ status: "disconnected" });
+                } catch (e) { }
                 localStorage.removeItem('gurupro_sid');
                 location.reload();
             }
@@ -347,29 +823,29 @@
         function showToast(msg) {
             var x = document.getElementById("toast");
             x.className = "show"; x.innerText = msg;
-            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+            setTimeout(function () { x.className = x.className.replace("show", ""); }, 3000);
         }
 
         async function loadProf(nip) {
             try {
-                const s = await db.collection("users").where("nip","==",nip).limit(1).get();
-                if(!s.empty && s.docs[0].data().foto_base64) document.getElementById('p-img').src = s.docs[0].data().foto_base64;
-            } catch(e) {}
+                const s = await db.collection("users").where("nip", "==", nip).limit(1).get();
+                if (!s.empty && s.docs[0].data().foto_base64) document.getElementById('p-img').src = s.docs[0].data().foto_base64;
+            } catch (e) { }
         }
 
         async function loadCls(nip) {
-            if(isFetchingClasses) return; isFetchingClasses = true;
+            if (isFetchingClasses) return; isFetchingClasses = true;
             try {
-                const s = await db.collection("kelas").where("nip_guru","==",nip).get();
+                const s = await db.collection("kelas").where("nip_guru", "==", nip).get();
                 const c = document.getElementById('cls-list');
                 const q = document.getElementById('quick-list');
-                
+
                 document.getElementById('t-kelas').innerText = s.size;
                 document.getElementById('s-t-k').innerText = s.size;
 
                 let h1 = "", h2 = "", totS = 0, cnt = 0;
 
-                if(s.empty) { c.innerHTML = "<p style='text-align:center;color:#999;margin-top:50px'>Kosong</p>"; isFetchingClasses=false; return; }
+                if (s.empty) { c.innerHTML = "<p style='text-align:center;color:#999;margin-top:50px'>Kosong</p>"; isFetchingClasses = false; return; }
 
                 for (const d of s.docs) {
                     const dd = d.data();
@@ -377,21 +853,21 @@
                     try {
                         const sub = await db.collection("kelas").doc(d.id).collection("siswa").get();
                         sc = sub.size; totS += sc;
-                    } catch(e){}
+                    } catch (e) { }
 
                     h1 += `<div class="class-item" onclick="openA('${d.id}','${dd.nama_kelas}')">
-                        <div class="class-head"><div><h4 style="font-size:18px;font-weight:800;color:#0F172A;margin-bottom:5px;">${dd.nama_kelas}</h4><p style="font-size:14px;color:#64748B;">${dd.mata_pelajaran||'Umum'}</p></div><div class="btn-arr"><i class="ri-arrow-right-s-line"></i></div></div>
+                        <div class="class-head"><div><h4 style="font-size:18px;font-weight:800;color:#0F172A;margin-bottom:5px;">${dd.nama_kelas}</h4><p style="font-size:14px;color:#64748B;">${dd.mata_pelajaran || 'Umum'}</p></div><div class="btn-arr"><i class="ri-arrow-right-s-line"></i></div></div>
                         <div class="class-meta" style="border-top:1px dashed #E2E8F0; margin-top:15px; padding-top:10px;"><span class="meta-tag"><i class="ri-user-line"></i> ${sc} Siswa</span><span class="meta-tag active">Aktif</span></div>
                     </div>`;
 
-                    if(cnt < 3) {
-                        h2 += `<div style="background:white;padding:18px;border-radius:16px;margin-bottom:10px;border:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;" onclick="openA('${d.id}','${dd.nama_kelas}')"><div><strong style="display:block;color:#0F172A;">${dd.nama_kelas}</strong><small style="color:#64748B;">${sc} Siswa</small></div><i class="ri-arrow-right-s-line" style="color:#94A3B8;font-size:20px;"></i></div>`;
+                    if (cnt < 3) {
+                        h2 += `<div style="background:white;padding:18px;border-radius:16px;margin-bottom:10px;border:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="openA('${d.id}','${dd.nama_kelas}')"><div><strong style="display:block;color:#0F172A;">${dd.nama_kelas}</strong><small style="color:#64748B;">${sc} Siswa</small></div><i class="ri-arrow-right-s-line" style="color:#94A3B8;font-size:20px;"></i></div>`;
                         cnt++;
                     }
                 }
                 c.innerHTML = h1; q.innerHTML = h2;
                 document.getElementById('s-t-s').innerText = totS;
-            } catch(e) {} finally { isFetchingClasses = false; }
+            } catch (e) { } finally { isFetchingClasses = false; }
         }
 
         async function openA(id, nm) {
@@ -403,7 +879,7 @@
         }
 
         function chMeet(d) {
-            if(cMeet+d < 1 || cMeet+d > 16) return;
+            if (cMeet + d < 1 || cMeet + d > 16) return;
             cMeet += d; document.getElementById('meet-val').innerText = cMeet;
             loadD();
         }
@@ -415,9 +891,9 @@
             exDoc = null;
 
             try {
-                const check = await db.collection("absensi").where("id_kelas","==",actCls).where("pertemuan","==",mName).limit(1).get();
+                const check = await db.collection("absensi").where("id_kelas", "==", actCls).where("pertemuan", "==", mName).limit(1).get();
                 const btn = document.getElementById('btn-save');
-                if(!check.empty) {
+                if (!check.empty) {
                     exDoc = check.docs[0].id;
                     const dd = check.docs[0].data();
                     document.getElementById('i-materi').value = dd.materi;
@@ -427,13 +903,13 @@
                     document.getElementById('i-materi').value = ""; document.getElementById('i-catatan').value = "";
                     btn.innerHTML = "SIMPAN ABSENSI"; btn.style.background = "#0F172A";
                 }
-            } catch(e){}
+            } catch (e) { }
 
             try {
                 const s = await db.collection("kelas").doc(actCls).collection("siswa").orderBy("nama").get();
                 let h = "";
-                if(s.empty) { c.innerHTML="Kosong"; return; }
-                
+                if (s.empty) { c.innerHTML = "Kosong"; return; }
+
                 let oldData = [];
                 if (exDoc) {
                     const snap = await db.collection("absensi").doc(exDoc).get();
@@ -443,51 +919,51 @@
                 s.forEach(d => {
                     const dd = d.data();
                     let st = "Hadir", sc = 75;
-                    if(exDoc) {
+                    if (exDoc) {
                         const rec = oldData.find(x => x.nis == dd.nis);
-                        if(rec) { st = rec.status; sc = rec.nilai; }
+                        if (rec) { st = rec.status; sc = rec.nilai; }
                     }
 
                     h += `<div class="st-item" id="r-${dd.nis}">
                         <div class="st-head"><div><strong style="font-size:16px;color:#0F172A;">${dd.nama}</strong><br><small style="background:#F1F5F9;padding:2px 8px;border-radius:4px;color:#64748B;">${dd.nis}</small></div></div>
                         <div class="st-act">
-                            <div class="radio-box"><input type="radio" name="s_${dd.nis}" id="h_${dd.nis}" value="Hadir" ${st=='Hadir'?'checked':''} onchange="tgl('${dd.nis}',1)"><label for="h_${dd.nis}">H</label></div>
-                            <div class="radio-box"><input type="radio" name="s_${dd.nis}" id="s_${dd.nis}" value="Sakit" ${st=='Sakit'?'checked':''} onchange="tgl('${dd.nis}',0)"><label for="s_${dd.nis}">S</label></div>
-                            <div class="radio-box"><input type="radio" name="s_${dd.nis}" id="i_${dd.nis}" value="Izin" ${st=='Izin'?'checked':''} onchange="tgl('${dd.nis}',0)"><label for="i_${dd.nis}">I</label></div>
-                            <div class="radio-box"><input type="radio" name="s_${dd.nis}" id="a_${dd.nis}" value="Alpa" ${st=='Alpa'?'checked':''} onchange="tgl('${dd.nis}',0)"><label for="a_${dd.nis}">A</label></div>
+                            <div class="radio-box"><input type="radio" name="s_${dd.nis}" id="h_${dd.nis}" value="Hadir" ${st == 'Hadir' ? 'checked' : ''} onchange="tgl('${dd.nis}',1)"><label for="h_${dd.nis}">H</label></div>
+                            <div class="radio-box"><input type="radio" name="s_${dd.nis}" id="s_${dd.nis}" value="Sakit" ${st == 'Sakit' ? 'checked' : ''} onchange="tgl('${dd.nis}',0)"><label for="s_${dd.nis}">S</label></div>
+                            <div class="radio-box"><input type="radio" name="s_${dd.nis}" id="i_${dd.nis}" value="Izin" ${st == 'Izin' ? 'checked' : ''} onchange="tgl('${dd.nis}',0)"><label for="i_${dd.nis}">I</label></div>
+                            <div class="radio-box"><input type="radio" name="s_${dd.nis}" id="a_${dd.nis}" value="Alpa" ${st == 'Alpa' ? 'checked' : ''} onchange="tgl('${dd.nis}',0)"><label for="a_${dd.nis}">A</label></div>
                         </div>
-                        <div class="score-inp"><span>Nilai</span><input type="number" id="v_${dd.nis}" value="${sc}" ${st!='Hadir'?'disabled style="background:#F1F5F9;color:#ccc"':''}></div>
+                        <div class="score-inp"><span>Nilai</span><input type="number" id="v_${dd.nis}" value="${sc}" ${st != 'Hadir' ? 'disabled style="background:#F1F5F9;color:#ccc"' : ''}></div>
                     </div>`;
                 });
                 c.innerHTML = h;
-            } catch(e) { c.innerHTML="Error"; }
+            } catch (e) { c.innerHTML = "Error"; }
         }
 
         function tgl(n, on) {
-            const i = document.getElementById('v_'+n);
-            if(on) { i.disabled=false; i.style.background="#F8FAFC"; i.style.color="#2563EB"; if(i.value==0) i.value=75; }
-            else { i.disabled=true; i.value=0; i.style.background="#F1F5F9"; i.style.color="#ccc"; }
+            const i = document.getElementById('v_' + n);
+            if (on) { i.disabled = false; i.style.background = "#F8FAFC"; i.style.color = "#2563EB"; if (i.value == 0) i.value = 75; }
+            else { i.disabled = true; i.value = 0; i.style.background = "#F1F5F9"; i.style.color = "#ccc"; }
         }
 
         async function save() {
             const m = document.getElementById('i-materi').value;
-            if(!m) { showToast("Isi Materi!"); return; }
-            
+            if (!m) { showToast("Isi Materi!"); return; }
+
             const btn = document.getElementById('btn-save');
             btn.disabled = true; btn.innerText = "Menyimpan...";
 
             const d = [];
             let err = false;
             document.querySelectorAll('.st-item').forEach(r => {
-                const nis = r.id.replace('r-','');
+                const nis = r.id.replace('r-', '');
                 const nm = r.querySelector('strong').innerText;
                 const st = document.querySelector(`input[name="s_${nis}"]:checked`).value;
-                const v = parseInt(document.getElementById('v_'+nis).value)||0;
-                if(v<0 || v>100) { err=true; showToast("Nilai "+nm+" tidak valid!"); }
-                d.push({nis:nis, nama:nm, status:st, nilai:v});
+                const v = parseInt(document.getElementById('v_' + nis).value) || 0;
+                if (v < 0 || v > 100) { err = true; showToast("Nilai " + nm + " tidak valid!"); }
+                d.push({ nis: nis, nama: nm, status: st, nilai: v });
             });
 
-            if(err) { btn.disabled = false; btn.innerHTML = '<i class="ri-save-3-line"></i> SIMPAN ABSENSI'; return; }
+            if (err) { btn.disabled = false; btn.innerHTML = '<i class="ri-save-3-line"></i> SIMPAN ABSENSI'; return; }
 
             const p = {
                 id_kelas: actCls, nama_kelas: actNm, pertemuan: `Pertemuan Ke-${cMeet}`,
@@ -497,19 +973,20 @@
             };
 
             try {
-                if(!exDoc) {
-                    const c = await db.collection("absensi").where("id_kelas","==",actCls).where("pertemuan","==",p.pertemuan).limit(1).get();
-                    if(!c.empty) exDoc = c.docs[0].id;
+                if (!exDoc) {
+                    const c = await db.collection("absensi").where("id_kelas", "==", actCls).where("pertemuan", "==", p.pertemuan).limit(1).get();
+                    if (!c.empty) exDoc = c.docs[0].id;
                 }
 
-                if(exDoc) await db.collection("absensi").doc(exDoc).set(p);
+                if (exDoc) await db.collection("absensi").doc(exDoc).set(p);
                 else await db.collection("absensi").add(p);
 
-                await db.collection("remote_sessions").doc(sid).update({ last_command: "refresh_ui_"+Date.now() });
+                await db.collection("remote_sessions").doc(sid).update({ last_command: "refresh_ui_" + Date.now() });
                 showToast("Tersimpan!"); nav('p-home');
-            } catch(e) { showToast("Gagal"); }
+            } catch (e) { showToast("Gagal"); }
             btn.disabled = false; btn.innerHTML = '<i class="ri-save-3-line"></i> SIMPAN ABSENSI';
         }
     </script>
 </body>
+
 </html>

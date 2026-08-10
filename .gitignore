@@ -10,3 +10,8 @@ venv/
 json/
 *.json
 *.txt
+
+# Output files & Byte-code
+*.xlsx
+*.pyc
+__pycache__/
