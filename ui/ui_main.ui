@@ -1,0 +1,2970 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1238</width>
+    <height>816</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_4">
+      <item>
+       <widget class="QFrame" name="contentFrame">
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Shape::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Shadow::Raised</enum>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_9">
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_12">
+           <item>
+            <widget class="QFrame" name="sidebarFrame">
+             <property name="maximumSize">
+              <size>
+               <width>250</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="autoFillBackground">
+              <bool>false</bool>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">/* ============================================================
+   SIDEBAR NAVIGASI (FINAL COMPLETE VERSION)
+   Target Object: sidebarFrame (QFrame)
+   ============================================================ */
+
+/* 1. CONTAINER UTAMA (BACKGROUND BIRU) */
+QFrame#sidebarFrame {
+    background-color: #2563EB !important; /* Paksa Biru Branding */
+    border: none;
+    border-right: 1px solid #1E40AF;      /* Garis batas kanan */
+    min-width: 250px;                     /* Lebar minimum */
+}
+
+/* 2. JUDUL APLIKASI (GURU PRO) */
+QFrame#sidebarFrame QLabel#labelJudul {
+    color: #FFFFFF !important;
+    font-family: &quot;Segoe UI&quot;, sans-serif;
+    font-size: 24px;
+    font-weight: 900;      /* Extra Bold */
+    margin-top: 25px;
+    margin-bottom: 30px;
+    padding-left: 20px;
+}
+
+/* 3. TOMBOL NAVIGASI (GAYA KAPSUL MELAYANG) */
+QFrame#sidebarFrame QPushButton {
+    background-color: transparent;
+    color: #DBEAFE;        /* Teks Biru Muda (Soft) */
+    text-align: left;
+    padding-left: 20px;
+    height: 42px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+
+    /* Margin Kiri-Kanan agar tombol 'mengambang' */
+    margin-left: 15px;
+    margin-right: 15px;
+    margin-bottom: 5px;
+}
+
+/* 3.1 Efek Hover (Saat Mouse Lewat) */
+QFrame#sidebarFrame QPushButton:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #FFFFFF;
+    padding-left: 25px;    /* Animasi geser sedikit */
+}
+
+/* 3.2 Efek Aktif/Checked (Tombol Putih) */
+QFrame#sidebarFrame QPushButton:checked {
+    background-color: #FFFFFF !important;
+    color: #2563EB !important;
+    font-weight: 800;
+    border-bottom: 3px solid #E2E8F0; /* Shadow halus bawah */
+}
+
+
+/* 4. BAGIAN PROFIL USER (BAWAH) */
+
+/* 4.1 Bingkai Profil */
+QFrame#sidebarFrame QFrame#frameProfil {
+    background-color: rgba(0, 0, 0, 0.15); /* Hitam transparan */
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    /* Posisi &amp; Jarak */
+    margin-left: 15px;
+    margin-right: 15px;
+    margin-bottom: 20px;
+    padding: 10px;         /* Memberi ruang napas untuk teks di dalam */
+    min-height: 50px;
+}
+
+/* 4.2 Reset Label Default di dalam Profil */
+QFrame#sidebarFrame QFrame#frameProfil QLabel {
+    background: transparent;
+    border: none;
+    padding: 0px;
+    margin: 0px;
+}
+
+/* 4.3 Teks Nama Guru (Wajib beri objectName: labelNamaProfil) */
+QFrame#sidebarFrame QFrame#frameProfil QLabel#labelNamaProfil {
+    color: #FFFFFF !important;
+    font-size: 14px;
+    font-weight: 700;      /* Bold */
+    margin-bottom: 4px;    /* Jarak ke NIP */
+}
+
+/* 4.4 Teks NIP (Wajib beri objectName: labelNipProfil) */
+QFrame#sidebarFrame QFrame#frameProfil QLabel#labelNipProfil {
+    color: #BFDBFE !important; /* Biru Muda */
+    font-size: 12px;
+    font-weight: 500;
+}</string>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::Shape::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Raised</enum>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_6">
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout">
+                <item>
+                 <widget class="QLabel" name="labelJudul">
+                  <property name="font">
+                   <font>
+                    <family>Segoe UI</family>
+                    <pointsize>-1</pointsize>
+                    <fontweight>Black</fontweight>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>GURU PRO</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_5">
+                <item>
+                 <widget class="QPushButton" name="btnNavDashboard">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                  <property name="focusPolicy">
+                   <enum>Qt::FocusPolicy::NoFocus</enum>
+                  </property>
+                  <property name="text">
+                   <string>Dashboard</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>home_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.ico</normaloff>home_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.ico</iconset>
+                  </property>
+                  <property name="checkable">
+                   <bool>true</bool>
+                  </property>
+                  <property name="checked">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btnNavKelas">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Kelas</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>co_present_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.ico</normaloff>co_present_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.ico</iconset>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btnPerangkat">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Perangkat Tertaut</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>devices_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.ico</normaloff>devices_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.ico</iconset>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btnNavMengajar">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Mengajar</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>calendar_today_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.ico</normaloff>calendar_today_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.ico</iconset>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btnNavLaporan">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Laporan</string>
+                  </property>
+                  <property name="icon">
+                   <iconset>
+                    <normaloff>assignment_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.ico</normaloff>assignment_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.ico</iconset>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <spacer name="verticalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnNavPengaturan">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>40</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Pengaturan</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>settings_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.ico</normaloff>settings_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.ico</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnNavKeluar">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>40</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Keluar</string>
+                </property>
+                <property name="icon">
+                 <iconset>
+                  <normaloff>tab_move_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.ico</normaloff>tab_move_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.ico</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QFrame" name="frameProfil">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true"/>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::Shape::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Shadow::Raised</enum>
+                </property>
+                <layout class="QHBoxLayout" name="horizontalLayout_5">
+                 <item>
+                  <widget class="QLabel" name="lblFotoUser">
+                   <property name="minimumSize">
+                    <size>
+                     <width>40</width>
+                     <height>40</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>40</width>
+                     <height>40</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">background-color: #E0E7FF; /* Warna abu-biru muda */
+border-radius: 20px;       /* Setengah dari ukuran (40/2) biar jadi bulat sempurna */
+border: 2px solid white;</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="lblNamaUser">
+                   <property name="styleSheet">
+                    <string notr="true"/>
+                   </property>
+                   <property name="text">
+                    <string>Pak Imam S.Pd</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label">
+                   <property name="text">
+                    <string>&gt;</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QStackedWidget" name="stackedWidget">
+           <property name="styleSheet">
+            <string notr="true">/* ============================================================
+   HALAMAN LAPORAN (PROFESSIONAL ANALYTICS STYLE)
+   ============================================================ */
+
+/* 1. BACKGROUND HALAMAN */
+QWidget#pageLaporan {
+    background-color: #F8FAFC; /* Slate 50 (Lebih dingin &amp; bersih) */
+}
+
+/* 2. HEADER JUDUL */
+QLabel#lblJudulLaporan {
+    font-size: 28px;
+    font-weight: 900;     /* Extra Bold */
+    color: #0F172A;       /* Hitam Pekat */
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+}
+
+/* 3. FILTER BAR (WHITE PANEL) */
+QFrame#frameFilterLaporan {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 12px;
+    /* Sedikit shadow halus */
+    border-bottom: 3px solid #E2E8F0;
+}
+
+/* Label Kecil di Filter */
+QFrame#frameFilterLaporan QLabel {
+    font-weight: 700;
+    color: #64748B;
+    margin-right: 5px;
+}
+
+/* Dropdown (ComboBox) */
+QComboBox#comboLapKelas, QComboBox#comboLapBulan {
+    background-color: #F1F5F9;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 8px 15px;
+    font-weight: 600;
+    color: #1E293B;
+    min-width: 140px;
+}
+
+/* --- TOMBOL AKSI (ACTION BUTTONS) --- */
+
+/* Tombol Tampilkan (Biru Elegan) */
+QPushButton#btnTampilkan {
+    background-color: #3B82F6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: bold;
+    font-size: 13px;
+}
+QPushButton#btnTampilkan:hover { background-color: #2563EB; }
+
+/* Tombol Excel (Hijau Emerald Professional) */
+QPushButton#btnExportExcel {
+    background-color: #10B981;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: bold;
+    font-size: 13px;
+    border-bottom: 3px solid #059669; /* Efek 3D */
+}
+QPushButton#btnExportExcel:hover { 
+    background-color: #059669; 
+    margin-top: 2px;
+    border-bottom: 1px solid #059669;
+}
+
+/* Tombol PDF (Merah Rose Professional) */
+QPushButton#btnCetakPDF {
+    background-color: #F43F5E;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: bold;
+    font-size: 13px;
+    border-bottom: 3px solid #E11D48; /* Efek 3D */
+}
+QPushButton#btnCetakPDF:hover { 
+    background-color: #E11D48; 
+    margin-top: 2px;
+    border-bottom: 1px solid #E11D48;
+}
+
+
+/* 4. KARTU STATISTIK (HERO SECTION) */
+QFrame#cardStat1, QFrame#cardStat2, QFrame#cardStat3 {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px; /* Lebih membulat */
+    border-bottom: 4px solid #CBD5E1;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+/* AKSEN WARNA TEBAL DI KIRI KARTU */
+QFrame#cardStat1 { border-left: 8px solid #3B82F6; } /* Biru */
+QFrame#cardStat2 { border-left: 8px solid #10B981; } /* Hijau */
+QFrame#cardStat3 { border-left: 8px solid #F43F5E; } /* Merah */
+
+/* Judul Kecil (Header Kartu) */
+QFrame#cardStat1 QLabel, QFrame#cardStat2 QLabel, QFrame#cardStat3 QLabel {
+    color: #64748B;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: transparent;
+    margin-bottom: 5px;
+}
+
+/* ANGKA RAKSASA (Pastikan objectName sudah diganti!) */
+QLabel#lblAngkaStat1, QLabel#lblAngkaStat2, QLabel#lblAngkaStat3 {
+    font-size: 36px;      /* Sangat Besar */
+    font-weight: 900;     /* Sangat Tebal */
+    color: #0F172A;       /* Hitam Pekat */
+    background: transparent;
+    margin-top: 5px;
+}
+/* Warna Khusus Angka */
+QLabel#lblAngkaStat1 { color: #3B82F6; } /* Angka Biru */
+QLabel#lblAngkaStat2 { color: #10B981; } /* Angka Hijau */
+QLabel#lblAngkaStat3 { color: #F43F5E; } /* Angka Merah */
+
+
+/* 5. TABEL REKAPITULASI (CLEAN &amp; GRIDLESS) */
+QFrame#cardTabelLaporan {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    border-bottom: 4px solid #CBD5E1;
+}
+
+QTableWidget#tableRekap {
+    background-color: #FFFFFF;
+    border: none;
+    gridline-color: transparent; /* Hilangkan garis grid biar modern */
+    font-size: 13px;
+    color: #334155;
+    padding: 10px;
+}
+
+/* Header Tabel */
+QTableWidget#tableRekap QHeaderView::section {
+    background-color: #F1F5F9; /* Abu Terang */
+    color: #475569;            /* Teks Abu Gelap */
+    padding: 15px 10px;        /* Padding Lega */
+    border: none;
+    border-bottom: 2px solid #E2E8F0;
+    font-weight: 800;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Warna Item Tabel */
+QTableWidget#tableRekap::item {
+    border-bottom: 1px solid #F1F5F9; /* Garis tipis antar baris */
+    padding: 5px;
+}
+QTableWidget#tableRekap::item:selected {
+    background-color: #EFF6FF; /* Highlight Biru Muda */
+    color: #2563EB;
+}</string>
+           </property>
+           <property name="currentIndex">
+            <number>3</number>
+           </property>
+           <widget class="QWidget" name="pageDashboard">
+            <property name="styleSheet">
+             <string notr="true">/* ============================================================
+   FIX BACKGROUND &amp; STYLE PRO (EDLINK VIBE)
+   ============================================================ */
+
+/* 1. GLOBAL BACKGROUND (DASAR APLIKASI) */
+/* Kita paksa background utama jadi ABU MUDA (Slate 100) */
+QMainWindow, QWidget#centralwidget, QStackedWidget {
+    background-color: #F1F5F9; 
+    font-family: &quot;Segoe UI&quot;, sans-serif;
+}
+
+/* 2. KHUSUS HALAMAN DASHBOARD */
+/* Memastikan halaman dashboard tidak transparan/biru */
+QWidget#pageDashboard {
+    background-color: #F1F5F9; 
+}
+
+/* 3. SIDEBAR KIRI (WAJIB BIRU) */
+/* Pastikan objectName sidebar kamu: contentFrame */
+QWidget#contentFrame {
+    background-color: #2563EB; /* Biru Royal */
+    border: none;
+    border-right: 1px solid #1E40AF; /* Garis batas tipis */
+}
+
+/* --- ELEMEN SIDEBAR --- */
+/* Judul Aplikasi */
+QWidget#contentFrame QLabel#labelJudul {
+    color: #FFFFFF !important;
+    font-size: 22px;
+    font-weight: 900;
+    margin-top: 15px;
+    margin-bottom: 20px;
+    padding-left: 10px;
+}
+
+/* Tombol Navigasi */
+QWidget#contentFrame QPushButton {
+    background-color: transparent;
+    color: #DBEAFE; 
+    text-align: left;
+    padding-left: 20px;
+    height: 48px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    margin: 2px 10px;
+}
+QWidget#contentFrame QPushButton:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #FFFFFF;
+}
+QWidget#contentFrame QPushButton:checked {
+    background-color: #FFFFFF;
+    color: #2563EB;
+    font-weight: bold;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Profil User Bawah */
+QWidget#contentFrame QFrame#frameProfil {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+}
+QWidget#contentFrame QFrame#frameProfil QLabel {
+    color: #FFFFFF !important;
+}
+
+/* 4. AREA KONTEN DASHBOARD */
+/* Header Teks */
+QLabel#lblDashboard { color: #0F172A; font-size: 28px; font-weight: 800; }
+QLabel#lblTanggal { color: #64748B; font-size: 14px; font-weight: 500; }
+QLabel#lblJam { color: #2563EB; font-size: 18px; font-weight: bold; font-family: monospace; }
+
+/* KARTU JADWAL (BESAR) */
+QFrame#frameJadwal {
+    background-color: #FFFFFF; /* Wajib Putih */
+    border-radius: 16px;
+    border: 1px solid #E2E8F0;
+    border-bottom: 4px solid #E2E8F0;
+    border-left: 6px solid #2563EB; /* Aksen Biru Kiri */
+}
+
+/* KARTU STATISTIK (BAWAH) */
+QFrame#cardHadir, QFrame#cardTugas, QFrame#cardInfo {
+    background-color: #FFFFFF; /* Wajib Putih */
+    border-radius: 16px;
+    border: 1px solid #E2E8F0;
+    border-bottom: 4px solid #E2E8F0;
+}
+
+/* ISI KARTU BAWAH */
+QLabel#lblJudulHadir, QLabel#lblJudulTugas, QLabel#lblJudulInfo {
+    color: #64748B; font-weight: 700; font-size: 11px; text-transform: uppercase;
+}
+QLabel#lblAngkaHadir, QLabel#lblAngkaTugas {
+    color: #0F172A; font-size: 48px; font-weight: 800;
+}
+QLabel#lblKetHadir, QLabel#lblKetTugas, QLabel#lblIsiInfo {
+    background-color: #F1F5F9; /* Badge Abu */
+    color: #475569;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}</string>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_8">
+             <item>
+              <layout class="QVBoxLayout" name="verticalLayout_13">
+               <property name="spacing">
+                <number>20</number>
+               </property>
+               <item>
+                <widget class="QFrame" name="headerFrame">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>120</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>80</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <family>Segoe UI</family>
+                   <pointsize>24</pointsize>
+                  </font>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">background-color: transparent;
+border: none;</string>
+                 </property>
+                 <property name="frameShape">
+                  <enum>QFrame::Shape::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Shadow::Raised</enum>
+                 </property>
+                 <layout class="QHBoxLayout" name="horizontalLayout_3">
+                  <item>
+                   <layout class="QVBoxLayout" name="verticalLayout_7">
+                    <property name="spacing">
+                     <number>15</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>10</number>
+                    </property>
+                    <item>
+                     <widget class="QLabel" name="labelDashboard">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <family>Segoe UI</family>
+                        <pointsize>24</pointsize>
+                        <bold>true</bold>
+                       </font>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true"/>
+                      </property>
+                      <property name="text">
+                       <string>Dashboard</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="labelTanggal">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true"/>
+                      </property>
+                      <property name="text">
+                       <string>Selasa, 6 Januari 2026</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="labelJam">
+                      <property name="text">
+                       <string>08:15:40</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QFrame" name="frameJadwal">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>280</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>300</height>
+                  </size>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true"/>
+                 </property>
+                 <property name="frameShape">
+                  <enum>QFrame::Shape::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Shadow::Raised</enum>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout">
+                  <item row="0" column="0">
+                   <layout class="QVBoxLayout" name="verticalLayout_3">
+                    <property name="spacing">
+                     <number>10</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>10</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>5</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>10</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>5</number>
+                    </property>
+                    <item>
+                     <layout class="QVBoxLayout" name="verticalLayout_14"/>
+                    </item>
+                    <item>
+                     <spacer name="verticalSpacer_3">
+                      <property name="orientation">
+                       <enum>Qt::Orientation::Vertical</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>20</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="lblJudulJadwal">
+                      <property name="font">
+                       <font>
+                        <family>Segoe UI</family>
+                        <bold>true</bold>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string>Jadwal Mengajar Hari Ini</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignmentFlag::AlignCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <layout class="QHBoxLayout" name="horizontalLayout_2">
+                      <item>
+                       <widget class="QLabel" name="lblIsiJadwal">
+                        <property name="font">
+                         <font>
+                          <family>Segoe UI</family>
+                          <fontweight>Medium</fontweight>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>08:00 - 09:30 | Matematika | 5A</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignmentFlag::AlignCenter</set>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                    <item alignment="Qt::AlignmentFlag::AlignHCenter">
+                     <widget class="QPushButton" name="btnMulaiKelas">
+                      <property name="maximumSize">
+                       <size>
+                        <width>300</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QPushButton {
+    background-color: #2563EB; /* Biru Royal */
+    color: white;
+    border-radius: 20px; /* Membuatnya lonjong seperti kapsul */
+    padding: 10px 30px;
+    font-weight: bold;
+    font-size: 14px;
+}
+QPushButton:hover {
+    background-color: #1D4ED8; /* Biru lebih gelap saat hover */
+}</string>
+                      </property>
+                      <property name="text">
+                       <string>Mulai Kelas</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="verticalSpacer_2">
+                      <property name="orientation">
+                       <enum>Qt::Orientation::Vertical</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>20</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="2,2,2">
+                 <property name="spacing">
+                  <number>20</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>30</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>30</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>30</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>30</number>
+                 </property>
+                 <item>
+                  <widget class="QFrame" name="cardHadir">
+                   <property name="styleSheet">
+                    <string notr="true"/>
+                   </property>
+                   <property name="frameShape">
+                    <enum>QFrame::Shape::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Shadow::Raised</enum>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_6">
+                    <item>
+                     <layout class="QVBoxLayout" name="verticalLayout_2">
+                      <property name="spacing">
+                       <number>5</number>
+                      </property>
+                      <property name="leftMargin">
+                       <number>20</number>
+                      </property>
+                      <property name="topMargin">
+                       <number>20</number>
+                      </property>
+                      <property name="rightMargin">
+                       <number>20</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>20</number>
+                      </property>
+                      <item alignment="Qt::AlignmentFlag::AlignHCenter">
+                       <widget class="QLabel" name="lblJudulHadir">
+                        <property name="font">
+                         <font>
+                          <family>Segoe UI</family>
+                          <pointsize>-1</pointsize>
+                          <bold>true</bold>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>Kehadiran Hari Ini</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item alignment="Qt::AlignmentFlag::AlignHCenter">
+                       <widget class="QLabel" name="lblAngkaHadir">
+                        <property name="font">
+                         <font>
+                          <family>Segoe UI</family>
+                          <pointsize>-1</pointsize>
+                          <fontweight>ExtraBold</fontweight>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>96%</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item alignment="Qt::AlignmentFlag::AlignHCenter">
+                       <widget class="QLabel" name="lblKetHadir">
+                        <property name="text">
+                         <string>Hadir</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="cardTugas">
+                   <property name="styleSheet">
+                    <string notr="true"/>
+                   </property>
+                   <property name="frameShape">
+                    <enum>QFrame::Shape::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Shadow::Raised</enum>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_7">
+                    <item>
+                     <layout class="QVBoxLayout" name="verticalLayout_9">
+                      <property name="spacing">
+                       <number>5</number>
+                      </property>
+                      <item alignment="Qt::AlignmentFlag::AlignHCenter">
+                       <widget class="QLabel" name="lblJudulTugas">
+                        <property name="text">
+                         <string>Perlu Dinilai</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item alignment="Qt::AlignmentFlag::AlignHCenter">
+                       <widget class="QLabel" name="lblAngkaTugas">
+                        <property name="font">
+                         <font>
+                          <family>Segoe UI</family>
+                          <pointsize>-1</pointsize>
+                          <fontweight>ExtraBold</fontweight>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>12</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item alignment="Qt::AlignmentFlag::AlignHCenter">
+                       <widget class="QLabel" name="lblKetTugas">
+                        <property name="text">
+                         <string>Tugas Matematika</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="cardInfo">
+                   <property name="styleSheet">
+                    <string notr="true"/>
+                   </property>
+                   <property name="frameShape">
+                    <enum>QFrame::Shape::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Shadow::Raised</enum>
+                   </property>
+                   <layout class="QVBoxLayout" name="verticalLayout_11">
+                    <item>
+                     <layout class="QVBoxLayout" name="verticalLayout_10">
+                      <property name="spacing">
+                       <number>5</number>
+                      </property>
+                      <item alignment="Qt::AlignmentFlag::AlignHCenter">
+                       <widget class="QLabel" name="lblJudulInfo">
+                        <property name="text">
+                         <string>Pengumuman</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item alignment="Qt::AlignmentFlag::AlignHCenter">
+                       <widget class="QLabel" name="lblIsiInfo">
+                        <property name="text">
+                         <string>Rapat Dewan Guru
+Jam 13.00 di Aula</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="pageKelas">
+            <property name="styleSheet">
+             <string notr="true">/* ============================================================
+   HALAMAN KELAS SAYA (MODERN &amp; STREAMLINED)
+   ============================================================ */
+
+/* 1. BACKGROUND HALAMAN */
+QWidget#pageKelas {
+    background-color: #F8FAFC; 
+}
+
+/* 2. HEADER AREA */
+QLabel#lblJudulPageKelas {
+    color: #0F172A;
+    font-size: 26px;
+    font-weight: 800;
+}
+
+QLineEdit#inputCariKelas {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 14px;
+}
+
+QPushButton#btnBuatKelas {
+    background-color: #2563EB;
+    color: white;
+    border-radius: 12px;
+    padding: 10px 24px;
+    font-weight: 700;
+    border-bottom: 3px solid #1E40AF;
+}
+
+/* ============================================================
+   KARTU KELAS (DENGAN ACTION STRIP DI BAWAH)
+   ============================================================ */
+
+QFrame#cardKelasSample {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 20px;
+    /* Bayangan halus */
+    border-bottom: 2px solid #F1F5F9;
+}
+
+/* Header Kartu (Misal: Kode Kelas) */
+QFrame#bannerKelas {
+    background-color: #EFF6FF; /* Biru sangat muda */
+    border-top-left-radius: 18px; 
+    border-top-right-radius: 18px;
+    border-bottom: 1px solid #DBEAFE;
+}
+
+QLabel#lblKodeMapel {
+    color: #2563EB;
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+/* Body Teks */
+QLabel#lblNamaKelas {
+    font-size: 18px;
+    font-weight: 800;
+    color: #1E293B;
+}
+
+QLabel#lblJadwalKelas, QLabel#lblPengajarKelas {
+    font-size: 13px;
+    color: #64748B;
+}
+
+/* --- ACTION STRIP (DROW TOMBOL DI BAWAH) --- */
+
+/* 1. Tombol Masuk (Primary - Biru) */
+QPushButton#btnMasukKelas {
+    background-color: #2563EB;
+    color: white;
+    border-radius: 10px;
+    font-weight: 800;
+    padding: 10px 20px;
+    min-width: 120px;
+}
+QPushButton#btnMasukKelas:hover {
+    background-color: #1D4ED8;
+}
+
+/* 2. Tombol Impor Siswa (Secondary - Hijau) */
+/* Gus, tombol ini kita taruh di dalam kartu sebagai ikon/teks kecil */
+QPushButton#btnImportSiswa {
+    background-color: #F0FDF4;
+    color: #166534;
+    border: 1px solid #BBF7D0;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 8px 16px;
+}
+QPushButton#btnImportSiswa:hover {
+    background-color: #DCFCE7;
+    border-color: #16A34A;
+}
+
+/* 3. Tombol Hapus (Danger - Merah Soft) */
+QPushButton#btnHapusKelas {
+    background-color: #FFF1F2;
+    color: #BE123C;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 8px 16px;
+}
+QPushButton#btnHapusKelas:hover {
+    background-color: #FFE4E6;
+}</string>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_10">
+             <item>
+              <layout class="QVBoxLayout" name="verticalLayout_8">
+               <item>
+                <widget class="QScrollArea" name="scrollAreaWidgetContents_3">
+                 <property name="styleSheet">
+                  <string notr="true"/>
+                 </property>
+                 <property name="widgetResizable">
+                  <bool>true</bool>
+                 </property>
+                 <widget class="QWidget" name="scrollAreaWidgetContents_2">
+                  <property name="geometry">
+                   <rect>
+                    <x>0</x>
+                    <y>0</y>
+                    <width>917</width>
+                    <height>754</height>
+                   </rect>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayout_18">
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_11">
+                     <item>
+                      <widget class="QLabel" name="lblJudulPageKelas">
+                       <property name="font">
+                        <font>
+                         <family>Segoe UI</family>
+                         <pointsize>-1</pointsize>
+                         <fontweight>ExtraBold</fontweight>
+                        </font>
+                       </property>
+                       <property name="text">
+                        <string>KELAS SAYA</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="inputCariKelas">
+                       <property name="placeholderText">
+                        <string>Cari kelas...</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btnBuatKelas">
+                       <property name="text">
+                        <string>+ Buat Kelas Baru</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_15">
+                     <item>
+                      <widget class="QComboBox" name="comboFilterSemester">
+                       <property name="placeholderText">
+                        <string>Semester...</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="lblTotalKelas">
+                       <property name="text">
+                        <string>Menampilkan 4 Kelas...</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <widget class="QScrollArea" name="scrollAreaKelas">
+                     <property name="styleSheet">
+                      <string notr="true"/>
+                     </property>
+                     <property name="widgetResizable">
+                      <bool>true</bool>
+                     </property>
+                     <widget class="QWidget" name="scrollContentKelas">
+                      <property name="geometry">
+                       <rect>
+                        <x>0</x>
+                        <y>0</y>
+                        <width>897</width>
+                        <height>651</height>
+                       </rect>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">/* ============================================================
+   GURU PRO - MASTER STYLESHEET (PROFESSIONAL CLEAN LOOK)
+   ============================================================ */
+
+/* --- 1. SETTING FONDASI (GLOBAL) --- */
+/* Mengunci background utama jadi Abu Soft agar tidak ada 'bocor' biru */
+QMainWindow, QWidget#centralwidget, QStackedWidget {
+    background-color: #F1F5F9; 
+    font-family: &quot;Segoe UI&quot;, sans-serif;
+    outline: none;
+}
+
+/* Memastikan halaman-halaman konten background-nya senada */
+QWidget#pageDashboard, QWidget#pageKelas {
+    background-color: #F1F5F9;
+}
+
+/* --- 2. SIDEBAR NAVIGASI (KIRI) --- */
+/* Satu-satunya elemen yang boleh berwarna Biru */
+QWidget#contentFrame {
+    background-color: #2563EB; /* Royal Blue */
+    border: none;
+    border-right: 1px solid #1E40AF;
+}
+
+/* Judul Aplikasi */
+QWidget#contentFrame QLabel#labelJudul {
+    color: #FFFFFF !important;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    margin-top: 20px;
+    margin-bottom: 25px;
+    padding-left: 15px;
+}
+
+/* Tombol Menu Sidebar */
+QWidget#contentFrame QPushButton {
+    background-color: transparent;
+    color: #DBEAFE; 
+    text-align: left;
+    padding-left: 20px;
+    height: 48px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    margin: 4px 12px; /* Margin kiri-kanan biar tombol 'bernapas' */
+}
+/* Efek Hover Menu */
+QWidget#contentFrame QPushButton:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #FFFFFF;
+}
+/* Efek Menu Aktif */
+QWidget#contentFrame QPushButton:checked {
+    background-color: #FFFFFF;
+    color: #2563EB;
+    font-weight: bold;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Profil User (Bawah) */
+QWidget#contentFrame QFrame#frameProfil {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    margin: 15px;
+}
+QWidget#contentFrame QFrame#frameProfil QLabel {
+    color: #FFFFFF !important;
+    font-weight: 600;
+}
+
+/* --- 3. KOMPONEN UMUM (INPUT &amp; TOMBOL) --- */
+/* Search Bar (Input Pencarian) */
+QLineEdit {
+    background-color: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    color: #334155;
+}
+QLineEdit:focus {
+    border: 1px solid #2563EB; /* Biru saat diketik */
+}
+
+/* Tombol Utama (Biru Solid) - Contoh: + Buat Kelas */
+QPushButton#btnBuatKelas, QPushButton#btnMulaiKelas {
+    background-color: #2563EB;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: bold;
+    font-size: 14px;
+}
+QPushButton#btnBuatKelas:hover, QPushButton#btnMulaiKelas:hover {
+    background-color: #1D4ED8;
+}
+
+/* Dropdown Filter */
+QComboBox {
+    background-color: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    padding: 5px 10px;
+    color: #475569;
+}
+
+/* --- 4. KARTU KELAS (CARD STYLE) --- */
+/* Frame Utama Kartu */
+QFrame#cardKelasSample {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    border-bottom: 3px solid #CBD5E1; /* Shadow tebal bawah */
+}
+QFrame#cardKelasSample:hover {
+    border-color: #2563EB; /* Jadi biru saat disentuh */
+    border-bottom-color: #2563EB;
+    cursor: pointer;
+}
+
+/* Banner Biru Atas */
+QFrame#bannerKelas {
+    background-color: #2563EB;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+/* Teks Kode Mapel di Banner */
+QFrame#bannerKelas QLabel {
+    color: #FFFFFF;
+    font-weight: bold;
+    font-size: 14px;
+    padding-left: 8px;
+    background: transparent;
+}
+
+/* Teks Judul Mapel */
+QLabel#lblNamaKelas {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1E293B;
+    margin-top: 12px;
+}
+
+/* Tombol Masuk (Footer) */
+QPushButton#btnMasukKelas {
+    background-color: #F8FAFC;
+    color: #2563EB;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    min-width: 70px;
+    max-width: 90px;
+    height: 28px;
+}
+QPushButton#btnMasukKelas:hover {
+    background-color: #2563EB;
+    color: #FFFFFF;
+    border: none;
+}</string>
+                      </property>
+                      <layout class="QVBoxLayout" name="verticalLayout_32">
+                       <item>
+                        <widget class="QFrame" name="cardKelasSample">
+                         <property name="minimumSize">
+                          <size>
+                           <width>300</width>
+                           <height>200</height>
+                          </size>
+                         </property>
+                         <property name="styleSheet">
+                          <string notr="true"/>
+                         </property>
+                         <property name="frameShape">
+                          <enum>QFrame::Shape::StyledPanel</enum>
+                         </property>
+                         <property name="frameShadow">
+                          <enum>QFrame::Shadow::Raised</enum>
+                         </property>
+                         <layout class="QVBoxLayout" name="verticalLayout_31">
+                          <item>
+                           <layout class="QVBoxLayout" name="verticalLayout_15">
+                            <item>
+                             <widget class="QFrame" name="bannerKelas">
+                              <property name="maximumSize">
+                               <size>
+                                <width>16777215</width>
+                                <height>60</height>
+                               </size>
+                              </property>
+                              <property name="frameShape">
+                               <enum>QFrame::Shape::StyledPanel</enum>
+                              </property>
+                              <property name="frameShadow">
+                               <enum>QFrame::Shadow::Raised</enum>
+                              </property>
+                              <layout class="QHBoxLayout" name="horizontalLayout_12">
+                               <item>
+                                <layout class="QHBoxLayout" name="horizontalLayout_13">
+                                 <item>
+                                  <widget class="QLabel" name="lblKodeMapel">
+                                   <property name="text">
+                                    <string>MTK-10A</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <spacer name="horizontalSpacer_2">
+                                   <property name="orientation">
+                                    <enum>Qt::Orientation::Horizontal</enum>
+                                   </property>
+                                   <property name="sizeHint" stdset="0">
+                                    <size>
+                                     <width>40</width>
+                                     <height>20</height>
+                                    </size>
+                                   </property>
+                                  </spacer>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="btnOpsiKelas">
+                                   <property name="text">
+                                    <string/>
+                                   </property>
+                                   <property name="icon">
+                                    <iconset>
+                                     <normaloff>../asset/OIP (1).ico</normaloff>../asset/OIP (1).ico</iconset>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                </layout>
+                               </item>
+                              </layout>
+                             </widget>
+                            </item>
+                            <item>
+                             <widget class="QFrame" name="frame">
+                              <property name="minimumSize">
+                               <size>
+                                <width>0</width>
+                                <height>100</height>
+                               </size>
+                              </property>
+                              <property name="maximumSize">
+                               <size>
+                                <width>16777215</width>
+                                <height>80</height>
+                               </size>
+                              </property>
+                              <property name="frameShape">
+                               <enum>QFrame::Shape::StyledPanel</enum>
+                              </property>
+                              <property name="frameShadow">
+                               <enum>QFrame::Shadow::Raised</enum>
+                              </property>
+                              <widget class="QLabel" name="label_4">
+                               <property name="geometry">
+                                <rect>
+                                 <x>14</x>
+                                 <y>13</y>
+                                 <width>141</width>
+                                 <height>16</height>
+                                </rect>
+                               </property>
+                               <property name="text">
+                                <string>Matematika Wajib</string>
+                               </property>
+                              </widget>
+                              <widget class="QLabel" name="lblJadwalKelas">
+                               <property name="geometry">
+                                <rect>
+                                 <x>13</x>
+                                 <y>36</y>
+                                 <width>143</width>
+                                 <height>22</height>
+                                </rect>
+                               </property>
+                               <property name="font">
+                                <font>
+                                 <family>Segoe UI</family>
+                                 <pointsize>-1</pointsize>
+                                 <fontweight>Medium</fontweight>
+                                </font>
+                               </property>
+                               <property name="text">
+                                <string>Senin, 08:00 - 09:30 </string>
+                               </property>
+                              </widget>
+                              <widget class="QLabel" name="lblPengajarKelas">
+                               <property name="geometry">
+                                <rect>
+                                 <x>12</x>
+                                 <y>65</y>
+                                 <width>121</width>
+                                 <height>16</height>
+                                </rect>
+                               </property>
+                               <property name="text">
+                                <string>Pak Imam</string>
+                               </property>
+                              </widget>
+                             </widget>
+                            </item>
+                            <item>
+                             <layout class="QHBoxLayout" name="horizontalLayout_14">
+                              <property name="spacing">
+                               <number>10</number>
+                              </property>
+                              <item alignment="Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignBottom">
+                               <widget class="QLabel" name="lblJmlSiswa">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>0</width>
+                                  <height>10</height>
+                                 </size>
+                                </property>
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>16777215</width>
+                                  <height>6</height>
+                                 </size>
+                                </property>
+                                <property name="text">
+                                 <string>Siswa</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignBottom">
+                               <widget class="QPushButton" name="btnImportSiswa">
+                                <property name="text">
+                                 <string>Impor (Excel)</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item alignment="Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignBottom">
+                               <widget class="QPushButton" name="btnMasukKelas">
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>126</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
+                                <property name="styleSheet">
+                                 <string notr="true">/* CSS LANGSUNG DI TOMBOL */
+QPushButton {
+    background-color: #FFFFFF;
+    color: #2563EB;
+    border: 2px solid #2563EB;
+    border-radius: 14px;
+    font-weight: 900;
+    font-size: 11px;
+    min-width: 60px;
+    padding: 4px;
+}
+
+QPushButton:hover {
+    background-color: #2563EB;
+    color: #FFFFFF;
+}
+
+QPushButton:pressed {
+    background-color: #1E40AF;
+    color: #FFFFFF;
+}</string>
+                                </property>
+                                <property name="text">
+                                 <string>Masuk</string>
+                                </property>
+                                <property name="flat">
+                                 <bool>false</bool>
+                                </property>
+                               </widget>
+                              </item>
+                             </layout>
+                            </item>
+                           </layout>
+                          </item>
+                         </layout>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="pageMengajar">
+            <property name="styleSheet">
+             <string notr="true">/* ============================================================
+   HALAMAN MENGAJAR (FULL STYLE - V2.0)
+   Clean, Professional, &amp; Integrated Input Form
+   ============================================================ */
+
+/* 1. BACKGROUND HALAMAN UTAMA */
+QWidget#pageMengajar {
+    background-color: #F8FAFC; /* Abu Sangat Muda (Lebih cerah dari F1F5F9) */
+}
+
+/* 2. HEADER: JUDUL HALAMAN */
+QLabel#lblJudulMengajar {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 26px;
+    font-weight: 800;       
+    color: #1E293B;         
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+}
+
+/* 3. AREA FILTER (KOTAK ATAS: KELAS &amp; PERTEMUAN) */
+QFrame#frameFilterMengajar {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0; /* Border lebih halus */
+    border-radius: 10px;
+    padding: 12px;
+}
+
+/* Label Kecil di Filter */
+QFrame#frameFilterMengajar QLabel {
+    font-weight: 700;
+    color: #64748B;
+    font-size: 12px;
+    text-transform: uppercase;
+    margin-right: 8px;
+}
+
+/* Dropdown (ComboBox) */
+QComboBox {
+    background-color: #F1F5F9; 
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    padding: 8px 15px;
+    font-weight: 600;
+    color: #334155;
+    min-width: 140px;
+}
+QComboBox:focus {
+    border: 1px solid #2563EB;
+    background-color: #FFFFFF;
+}
+QComboBox::drop-down {
+    border: none;
+    background: transparent;
+    width: 20px;
+}
+
+/* TOMBOL 'MULAI ABSENSI' */
+QPushButton#btnMulaiSesi {
+    background-color: #2563EB;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 13px;
+    padding: 10px 25px;
+    border-bottom: 3px solid #1E40AF;
+}
+QPushButton#btnMulaiSesi:hover {
+    background-color: #1D4ED8;
+    margin-top: 2px;
+    border-bottom: 1px solid #1E40AF;
+}
+QPushButton#btnMulaiSesi:pressed {
+    background-color: #1E3A8A;
+    border-bottom: none;
+    margin-top: 4px;
+}
+
+/* ------------------------------------------------------------
+   4. [BARU] AREA INPUT JURNAL (MATERI &amp; CATATAN)
+   ------------------------------------------------------------ */
+QFrame#frameFormInput {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-left: 5px solid #2563EB; /* Aksen Biru di Kiri */
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+/* Label Judul Input (Materi Pokok / Catatan) */
+QFrame#frameFormInput QLabel {
+    font-size: 11px;
+    font-weight: 800;
+    color: #94A3B8;         /* Abu Soft */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+/* Kotak Input Teks */
+QLineEdit#inputMateri, QLineEdit#inputCatatanJurnal {
+    background-color: #F8FAFC;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    padding: 10px 12px;     /* Padding Lega */
+    font-size: 14px;
+    font-weight: 600;
+    color: #1E293B;
+}
+
+/* Efek saat diklik (Fokus) */
+QLineEdit:focus {
+    background-color: #FFFFFF;
+    border: 2px solid #2563EB; /* Outline Biru */
+    color: #0F172A;
+}
+
+/* 5. KARTU PEMBUNGKUS TABEL */
+QFrame#cardMengajar {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    border-bottom: 4px solid #CBD5E1;
+    margin-top: 15px;
+    padding: 5px; /* Padding agar tabel tidak nempel pinggir */
+}
+
+/* Sub-Judul 'Daftar Hadir Siswa' */
+QLabel#lblSubJudulAbsen {
+    font-size: 16px;
+    font-weight: 800;
+    color: #334155;
+    margin: 10px 5px;
+}
+
+/* 6. TABEL ABSENSI */
+QTableWidget#tableAbsensi {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    gridline-color: #F1F5F9;
+    font-size: 13px;
+    color: #334155;
+    selection-background-color: #EFF6FF;
+    selection-color: #1E293B;
+    outline: none;
+}
+
+/* Header Tabel */
+QHeaderView::section {
+    background-color: #F8FAFC;
+    color: #475569;
+    padding: 12px 5px;
+    border: none;
+    border-bottom: 2px solid #E2E8F0;
+    border-right: 1px solid #F1F5F9;
+    font-weight: 800;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+/* Baris Tabel */
+QTableWidget::item {
+    padding: 5px;
+    border-bottom: 1px solid #F8FAFC;
+}
+
+/* 7. SPINBOX (INPUT NILAI 0-100) - Agar cantik di dalam tabel */
+QSpinBox {
+    border: 1px solid #CBD5E1;
+    border-radius: 4px;
+    padding: 4px;
+    background-color: #F8FAFC;
+    font-weight: bold;
+}
+QSpinBox:focus {
+    border: 2px solid #2563EB;
+    background-color: #FFFFFF;
+}
+
+/* 8. FOOTER &amp; TOMBOL SIMPAN */
+QLabel#lblTotalHadir {
+    font-size: 14px;
+    font-weight: 700;
+    color: #334155;
+    margin-right: 15px;
+}
+
+QPushButton#btnSimpanAbsensi {
+    background-color: #10B981; /* Hijau Emerald */
+    color: white;
+    font-weight: 800;
+    border-radius: 8px;
+    padding: 12px 30px;
+    font-size: 14px;
+    border-bottom: 3px solid #059669;
+}
+QPushButton#btnSimpanAbsensi:hover {
+    background-color: #059669;
+    margin-top: 2px;
+    border-bottom: 1px solid #047857;
+}
+QPushButton#btnSimpanAbsensi:pressed {
+    background-color: #047857;
+    border-bottom: none;
+    margin-top: 4px;
+}
+
+/* 9. SCROLLBAR (Minimalis) */
+QScrollBar:vertical {
+    border: none;
+    background: #F1F5F9;
+    width: 8px;
+    margin: 0px;
+    border-radius: 4px;
+}
+QScrollBar::handle:vertical {
+    background: #CBD5E1;
+    min-height: 20px;
+    border-radius: 4px;
+}
+QScrollBar::handle:vertical:hover {
+    background: #94A3B8;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_17">
+             <item>
+              <widget class="QLabel" name="lblJudulMengajar">
+               <property name="text">
+                <string>AKTIVITAS MENGAJAR</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QFrame" name="frameFilterMengajar">
+               <property name="frameShape">
+                <enum>QFrame::Shape::StyledPanel</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Shadow::Raised</enum>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_2">
+                <item row="0" column="0">
+                 <layout class="QHBoxLayout" name="horizontalLayout_18">
+                  <item>
+                   <widget class="QLabel" name="label_3">
+                    <property name="text">
+                     <string>Pilih Kelas :</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboPilihKelas">
+                    <property name="minimumSize">
+                     <size>
+                      <width>172</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>Matematika X-A</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item row="0" column="1">
+                 <layout class="QHBoxLayout" name="horizontalLayout_17">
+                  <item>
+                   <widget class="QLabel" name="label_5">
+                    <property name="text">
+                     <string>Pertemuan :</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="comboPertemuan">
+                    <property name="minimumSize">
+                     <size>
+                      <width>172</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>ke-1 (Senin, 08;00)</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_3">
+                    <property name="orientation">
+                     <enum>Qt::Orientation::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item row="0" column="2">
+                 <widget class="QPushButton" name="btnMulaiSesi">
+                  <property name="text">
+                   <string>Mulai Absensi</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QFrame" name="frameFormInput">
+               <property name="styleSheet">
+                <string notr="true">
+</string>
+               </property>
+               <property name="frameShape">
+                <enum>QFrame::Shape::StyledPanel</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Shadow::Raised</enum>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_4">
+                <item row="0" column="0">
+                 <layout class="QHBoxLayout" name="horizontalLayout_16">
+                  <item>
+                   <widget class="QLabel" name="labelMateri">
+                    <property name="text">
+                     <string>Materi Pokok :</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="inputMateri">
+                    <property name="placeholderText">
+                     <string>Contoh: Algoritma &amp; Struktur Data&quot;</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item row="1" column="0">
+                 <layout class="QHBoxLayout" name="horizontalLayout_26">
+                  <item>
+                   <widget class="QLabel" name="inputCatatanJurnal">
+                    <property name="text">
+                     <string>Catatan KBM :</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="inputMateri_2">
+                    <property name="placeholderText">
+                     <string>Contoh: Siswa sangat aktif, PR Halaman 10</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QFrame" name="cardMengajar">
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="frameShape">
+                <enum>QFrame::Shape::StyledPanel</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Shadow::Raised</enum>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_5">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="lblSubJudulAbsen">
+                  <property name="text">
+                   <string>Daftar Hadir Siswa</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QTableWidget" name="tableAbsensi">
+                  <property name="focusPolicy">
+                   <enum>Qt::FocusPolicy::NoFocus</enum>
+                  </property>
+                  <property name="editTriggers">
+                   <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+                  </property>
+                  <property name="selectionBehavior">
+                   <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+                  </property>
+                  <attribute name="horizontalHeaderStretchLastSection">
+                   <bool>true</bool>
+                  </attribute>
+                  <attribute name="verticalHeaderVisible">
+                   <bool>false</bool>
+                  </attribute>
+                  <column>
+                   <property name="text">
+                    <string>No</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>NIS</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>Nama Siswa</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>L/P</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>Status Kehadiran</string>
+                   </property>
+                  </column>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QFrame" name="frame_2">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>100</height>
+                   </size>
+                  </property>
+                  <property name="frameShape">
+                   <enum>QFrame::Shape::StyledPanel</enum>
+                  </property>
+                  <property name="frameShadow">
+                   <enum>QFrame::Shadow::Raised</enum>
+                  </property>
+                  <layout class="QHBoxLayout" name="horizontalLayout_20">
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_19">
+                     <item>
+                      <spacer name="horizontalSpacer_4">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="lblTotalHadir">
+                       <property name="text">
+                        <string>Total Hadir: 0/0</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btnSimpanAbsensi">
+                       <property name="text">
+                        <string>Simpan Absensi</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="pageLaporan">
+            <layout class="QVBoxLayout" name="verticalLayout_23">
+             <item>
+              <widget class="QLabel" name="lblJudulLaporan">
+               <property name="text">
+                <string>LAPORAN &amp; REKAPITULASI</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QFrame" name="frame_3">
+               <property name="frameShape">
+                <enum>QFrame::Shape::StyledPanel</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Shadow::Raised</enum>
+               </property>
+               <layout class="QHBoxLayout" name="horizontalLayout_21">
+                <item>
+                 <widget class="QLabel" name="label_6">
+                  <property name="text">
+                   <string>Pilih Kelas</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="comboLapKelas"/>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_7">
+                  <property name="text">
+                   <string>Bulan</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="comboLapBulan"/>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btnTampilkan">
+                  <property name="text">
+                   <string>Tampilkan</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_5">
+                  <property name="orientation">
+                   <enum>Qt::Orientation::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btnExportExcel">
+                  <property name="text">
+                   <string>Export Excel</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btnCetakPDF">
+                  <property name="text">
+                   <string>Cetak PDF</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_22">
+               <item>
+                <widget class="QFrame" name="lblAngkaStat1">
+                 <property name="frameShape">
+                  <enum>QFrame::Shape::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Shadow::Raised</enum>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_19">
+                  <item>
+                   <widget class="QLabel" name="label_8">
+                    <property name="text">
+                     <string>Total Pertemuan</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_9">
+                    <property name="text">
+                     <string>12</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QFrame" name="lblAngkaStat2">
+                 <property name="frameShape">
+                  <enum>QFrame::Shape::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Shadow::Raised</enum>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_20">
+                  <item>
+                   <widget class="QLabel" name="label_10">
+                    <property name="text">
+                     <string>Rata-rata Kehadiran</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_11">
+                    <property name="text">
+                     <string>92%</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QFrame" name="lblAngkaStat3">
+                 <property name="frameShape">
+                  <enum>QFrame::Shape::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Shadow::Raised</enum>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_21">
+                  <item>
+                   <widget class="QLabel" name="label_12">
+                    <property name="text">
+                     <string>Siswa Alpa Tinggi</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_13">
+                    <property name="text">
+                     <string>3</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QFrame" name="cardTabelLaporan">
+               <property name="frameShape">
+                <enum>QFrame::Shape::StyledPanel</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Shadow::Raised</enum>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_22">
+                <item>
+                 <widget class="QTableWidget" name="tableRekap">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <attribute name="horizontalHeaderStretchLastSection">
+                   <bool>true</bool>
+                  </attribute>
+                  <column>
+                   <property name="text">
+                    <string>NO</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>NIS</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>Nama Siswa</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>H</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>S</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>I</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>% Kehadiran</string>
+                   </property>
+                  </column>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="pagePengaturan">
+            <property name="styleSheet">
+             <string notr="true">/* ============================================================
+   HALAMAN PENGATURAN (SETTINGS - CLEAN DASHBOARD STYLE)
+   ============================================================ */
+
+/* 1. BACKGROUND HALAMAN */
+QWidget#pagePengaturan {
+    background-color: #F8FAFC; /* Slate 50 (Putih Kebiruan) */
+}
+
+/* 2. HEADER JUDUL */
+QLabel#lblJudulPengaturan {
+    font-size: 28px;
+    font-weight: 900;     /* Extra Bold */
+    color: #0F172A;       /* Hitam Pekat */
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+}
+
+/* 3. KARTU PROFIL &amp; SISTEM (CONTAINER PUTIH) */
+QFrame#cardProfil, QFrame#cardSystem {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;       /* Sudut Membulat Modern */
+    border-bottom: 4px solid #CBD5E1; /* Shadow Bawah Tebal */
+    padding: 25px;             /* Jarak dalam lega */
+}
+
+/* Judul Kecil di dalam Kartu */
+QFrame#cardProfil QLabel, QFrame#cardSystem QLabel {
+    color: #64748B;
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 5px;
+    margin-top: 10px;
+}
+
+/* FOTO PROFIL BULAT (Placeholder) */
+QLabel#lblFotoProfilSetting {
+    background-color: #E2E8F0;
+    border: 2px dashed #94A3B8; /* Garis Putus-putus */
+    border-radius: 40px;        /* Setengah dari 80px biar bulat */
+    min-width: 80px;
+    min-height: 80px;
+    max-width: 80px;
+    max-height: 80px;
+    margin-bottom: 10px;
+    margin-top: 0px !important; /* Reset margin khusus foto */
+}
+
+/* INPUT FIELD (FORM) */
+QLineEdit#inputEditNama, QLineEdit#inputEditNIP, QLineEdit#inputEditMapel {
+    background-color: #F8FAFC;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: 14px;
+    color: #1E293B;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+QLineEdit:focus {
+    border: 2px solid #3B82F6; /* Fokus Biru Tebal */
+    background-color: #FFFFFF;
+}
+
+/* --- TOMBOL AKSI --- */
+
+/* 1. Tombol Ganti Foto (Kecil, Outline) */
+QPushButton#btnGantiFoto {
+    background-color: transparent;
+    color: #2563EB;
+    border: 1px solid #2563EB;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: bold;
+    max-width: 80px;
+    margin-bottom: 15px;
+}
+QPushButton#btnGantiFoto:hover { background-color: #EFF6FF; }
+
+/* 2. Tombol Simpan (Biru Besar - Primary) */
+QPushButton#btnSimpanProfil {
+    background-color: #2563EB;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-weight: 800;
+    font-size: 13px;
+    margin-top: 20px;
+    border-bottom: 3px solid #1E40AF; /* Efek Tombol Timbul */
+}
+QPushButton#btnSimpanProfil:hover { 
+    background-color: #1D4ED8;
+    margin-top: 22px; /* Efek terpencet */
+    border-bottom: 1px solid #1E40AF;
+}
+
+/* 3. Tombol Ganti Password &amp; Backup (Style List) */
+QPushButton#btnGantiPass, QPushButton#btnBackupData {
+    background-color: #FFFFFF;
+    color: #334155;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 12px;
+    font-weight: 600;
+    text-align: left;    /* Teks Rata Kiri */
+    padding-left: 15px;
+    margin-bottom: 10px;
+}
+QPushButton#btnGantiPass:hover, QPushButton#btnBackupData:hover {
+    border-color: #3B82F6;
+    color: #2563EB;
+    background-color: #F8FAFC;
+}
+
+/* 4. Tombol Reset (Bahaya - Merah) */
+QPushButton#btnResetApp {
+    background-color: #FEF2F2; /* Merah Muda Pucat */
+    color: #EF4444;            /* Teks Merah */
+    border: 1px dashed #EF4444;
+    border-radius: 8px;
+    padding: 12px;
+    font-weight: 700;
+    margin-top: 10px;
+}
+QPushButton#btnResetApp:hover {
+    background-color: #DC2626;
+    color: white;
+    border: none;
+}</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_29">
+             <item>
+              <widget class="QLabel" name="lblJudulPengaturan">
+               <property name="text">
+                <string>PENGATURAN AKUN</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_23">
+               <item>
+                <widget class="QFrame" name="cardProfil">
+                 <property name="frameShape">
+                  <enum>QFrame::Shape::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Shadow::Raised</enum>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_27">
+                  <item alignment="Qt::AlignmentFlag::AlignTop">
+                   <widget class="QLabel" name="label_14">
+                    <property name="text">
+                     <string>Profil Guru</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item alignment="Qt::AlignmentFlag::AlignHCenter">
+                   <widget class="QLabel" name="lblFotoProfilSetting">
+                    <property name="text">
+                     <string>TextLabel</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item alignment="Qt::AlignmentFlag::AlignHCenter">
+                   <widget class="QPushButton" name="btnGantiFoto">
+                    <property name="text">
+                     <string>Ubah Foto</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QVBoxLayout" name="verticalLayout_26">
+                    <item>
+                     <widget class="QLabel" name="label_16">
+                      <property name="text">
+                       <string>Nama Lengkap</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="inputEditNama">
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="placeholderText">
+                       <string>Input Nama</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QVBoxLayout" name="verticalLayout_25">
+                    <item>
+                     <widget class="QLabel" name="label_17">
+                      <property name="text">
+                       <string>NIP / ID Pengajar</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="inputEditNIP">
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="placeholderText">
+                       <string>Input NIP</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QVBoxLayout" name="verticalLayout_24">
+                    <item>
+                     <widget class="QLabel" name="label_18">
+                      <property name="text">
+                       <string>Mata Pelajaran Utama</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="inputEditMapel">
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="placeholderText">
+                       <string>Input Mapel</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item alignment="Qt::AlignmentFlag::AlignHCenter">
+                   <widget class="QPushButton" name="btnSimpanProfil">
+                    <property name="text">
+                     <string>Simpan Perubahan</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QFrame" name="cardSystem">
+                 <property name="frameShape">
+                  <enum>QFrame::Shape::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Shadow::Raised</enum>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_28">
+                  <item alignment="Qt::AlignmentFlag::AlignTop">
+                   <widget class="QLabel" name="label_19">
+                    <property name="text">
+                     <string>Keamanan &amp; Data</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btnGantiPass">
+                    <property name="text">
+                     <string>Ganti Password</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btnBackupData">
+                    <property name="text">
+                     <string>Backup Data (Excel)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btnResetApp">
+                    <property name="text">
+                     <string>Reset Aplikasi</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_20">
+                    <property name="text">
+                     <string>Versi 1.0.0</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="pagePerangkat">
+            <property name="styleSheet">
+             <string notr="true">/* ============================================================
+   HALAMAN PERANGKAT TERTAUT (FIXED CENTER ALIGNMENT)
+   ============================================================ */
+
+/* 1. BACKGROUND HALAMAN */
+QWidget#pagePerangkat {
+    background-color: #F8FAFC; /* Slate 50 */
+}
+
+/* 2. JUDUL HALAMAN */
+QLabel#lblJudulPerangkat {
+    font-family: &quot;Segoe UI&quot;, sans-serif;
+    font-size: 30px;
+    font-weight: 900;
+    color: #0F172A;
+    margin-bottom: 25px;
+    letter-spacing: -0.5px;
+}
+
+/* 3. KARTU UTAMA (CONTAINER) */
+QFrame#cardQrContainer {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 24px;
+    
+    /* Shadow 3D Halus */
+    border-bottom: 6px solid #DBEAFE; 
+    border-right: 1px solid #E2E8F0;
+}
+
+/* --- BAGIAN KIRI: AREA SCANNER --- */
+
+/* Bingkai QR Code */
+QLabel#lblQrCode {
+    background-color: #FFFFFF;
+    border: 2px dashed #CBD5E1; 
+    border-radius: 20px;
+    
+    /* Ukuran Wajib Fix agar kotak sempurna */
+    min-width: 240px;
+    min-height: 240px;
+    max-width: 240px;
+    max-height: 240px;
+    
+    qproperty-alignment: AlignCenter;
+    color: #94A3B8;
+    font-weight: 600;
+    
+    /* MARGIN AGAR POSISI DI TENGAH */
+    /* Kita dorong dari kiri dan kanan dengan jarak sama */
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-top: 10px;
+}
+
+/* Efek Hover QR */
+QLabel#lblQrCode:hover {
+    border-color: #3B82F6;
+    background-color: #F0F9FF;
+}
+
+/* Badge Status (Pill Merah) */
+QLabel#lblStatusKoneksi {
+    background-color: #FEF2F2;
+    color: #E11D48;
+    border: 1px solid #FECDD3;
+    border-radius: 18px;
+    
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    qproperty-alignment: AlignCenter;
+    
+    /* TRIK CENTER: Margin Kiri-Kanan Besar &amp; Seimbang */
+    margin-top: 20px;
+    margin-bottom: 5px;
+    margin-left: 40px;  /* Dorong 40px dari kiri */
+    margin-right: 40px; /* Dorong 40px dari kanan */
+    padding: 8px 0px;
+    min-height: 20px;
+}
+
+/* Tombol Refresh (Pill Biru) - FIX TENGAH */
+QPushButton#btnRefreshQr {
+    background-color: #FFFFFF;
+    color: #2563EB;
+    border: 1px solid #BFDBFE;
+    border-radius: 12px;
+    
+    font-weight: 700;
+    font-size: 13px;
+    
+    /* TRIK CENTER: Margin SAMAKAN dengan Badge di atasnya */
+    margin-top: 10px;
+    margin-left: 40px;  /* Wajib sama dengan margin-left status */
+    margin-right: 40px; /* Wajib sama dengan margin-right status */
+    padding: 10px 0px;
+}
+
+QPushButton#btnRefreshQr:hover {
+    background-color: #2563EB;
+    color: #FFFFFF;
+    border: none;
+    cursor: pointer;
+}
+
+
+/* --- BAGIAN KANAN: TEKS PANDUAN --- */
+
+/* Judul Kecil */
+QLabel#lblHeaderPanduan {
+    font-size: 18px;
+    font-weight: 800;
+    color: #1E293B;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #F1F5F9;
+    margin-right: 30px; 
+}
+
+/* Isi Teks */
+QLabel#lblPanduanQr {
+    color: #475569;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 26px; 
+    margin-right: 10px;
+}
+
+/* Footer Info */
+QLabel#lblInfoTambahan {
+    color: #94A3B8;
+    font-size: 12px;
+    font-style: italic;
+    margin-top: 15px;
+    background-color: #F8FAFC;
+    border-radius: 8px;
+    padding: 10px;
+    margin-right: 30px;
+}</string>
+            </property>
+            <widget class="QLabel" name="lblJudulPerangkat">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>30</y>
+               <width>491</width>
+               <height>91</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>HUBUNGKAN PERANGKAT</string>
+             </property>
+            </widget>
+            <widget class="QFrame" name="cardQrContainer">
+             <property name="geometry">
+              <rect>
+               <x>190</x>
+               <y>170</y>
+               <width>729</width>
+               <height>465</height>
+              </rect>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>700</width>
+               <height>400</height>
+              </size>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::Shape::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Raised</enum>
+             </property>
+             <layout class="QHBoxLayout" name="horizontalLayout_25">
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_24">
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_30">
+                  <item>
+                   <widget class="QFrame" name="frame_4">
+                    <property name="frameShape">
+                     <enum>QFrame::Shape::StyledPanel</enum>
+                    </property>
+                    <property name="frameShadow">
+                     <enum>QFrame::Shadow::Raised</enum>
+                    </property>
+                    <layout class="QGridLayout" name="gridLayout_3">
+                     <item row="0" column="0">
+                      <widget class="QLabel" name="lblQrCode">
+                       <property name="text">
+                        <string>TextLabel</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="lblStatusKoneksi">
+                    <property name="text">
+                     <string>Status: Menunggu Scan...</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
+                   <widget class="QPushButton" name="btnRefreshQr">
+                    <property name="text">
+                     <string>Refresh QR Code</string>
+                    </property>
+                    <property name="autoRepeatInterval">
+                     <number>121</number>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QLabel" name="lblPanduanQr">
+                <property name="text">
+                 <string>Cara Menghubungkan:
+
+
+
+1. Buka HP Anda dan pastikan ada internet.
+2. Scan QR Code di samping.
+3. Halaman kontrol akan terbuka otomatis.
+
+
+Gunakan fitur ini untuk slide presentasi atau input absensi jarak jauh.</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>866</width>
+    <height>615</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="bgLogin">
+   <property name="styleSheet">
+    <string notr="true">/* ============================================================
+   HALAMAN LOGIN (MODERN BLUE)
+   ============================================================ */
+
+/* 1. BACKGROUND UTAMA (FULL BIRU GRADASI HALUS) */
+QWidget#bgLogin {
+    background-color: #2563EB; /* Biru Branding */
+    /* Opsional: Jika ingin gradasi, ganti baris atas dengan:
+       background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #2563EB, stop:1 #1D4ED8); 
+    */
+}
+
+/* 2. KARTU LOGIN (PUTIH MELAYANG) */
+QFrame#cardLogin {
+    background-color: #FFFFFF;
+    border-radius: 20px;       /* Sudut sangat bulat */
+    border: 1px solid #E2E8F0;
+    /* Efek Shadow agar timbul */
+    border-bottom: 5px solid #1E40AF; 
+}
+
+/* 3. TEKS JUDUL */
+QLabel#lblJudul {
+    color: #2563EB;       /* Biru */
+    font-size: 32px;
+    font-weight: 900;     /* Extra Bold */
+    qproperty-alignment: AlignCenter;
+    margin-bottom: 5px;
+    margin-top: 10px;
+}
+
+QLabel#lblSubJudul {
+    color: #64748B;       /* Abu-abu */
+    font-size: 14px;
+    qproperty-alignment: AlignCenter;
+    margin-bottom: 25px;
+}
+
+/* 4. INPUT FIELD (USERNAME &amp; PASSWORD) */
+QLineEdit {
+    background-color: #F8FAFC;
+    border: 1px solid #CBD5E1;
+    border-radius: 10px;
+    padding: 12px 15px;
+    font-size: 14px;
+    color: #1E293B;
+    margin-bottom: 15px;
+}
+QLineEdit:focus {
+    border: 2px solid #2563EB; /* Fokus Biru */
+    background-color: #FFFFFF;
+}
+
+/* 5. TOMBOL MASUK (BESAR &amp; TEGAS) */
+QPushButton#btnLogin {
+    background-color: #2563EB;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 12px;
+    margin-top: 10px;
+    letter-spacing: 0.5px;
+}
+QPushButton#btnLogin:hover {
+    background-color: #1D4ED8;
+    margin-top: 12px; /* Efek tekan */
+    border-bottom: none;
+}
+QPushButton#btnLogin:pressed {
+    background-color: #1E3A8A;
+}
+
+/* 6. FOOTER (LUPA PASSWORD) */
+QLabel#lblFooter {
+    color: #94A3B8;
+    font-size: 12px;
+    qproperty-alignment: AlignCenter;
+    margin-top: 15px;
+}
+QLabel#lblFooter:hover {
+    color: #2563EB;
+    cursor: pointer;
+}
+
+/* 6. NAVIGASI BAWAH (LINK STYLE) */
+
+/* Tombol ke Daftar &amp; Lupa Password */
+QPushButton#btnKeDaftar, QPushButton#btnLupaPass {
+    background-color: transparent;
+    border: none;
+    color: #94A3B8;       /* Abu-abu soft */
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 5px;
+    text-align: center;
+}
+
+/* Efek saat mouse mendekat (Hover) */
+QPushButton#btnKeDaftar:hover, QPushButton#btnLupaPass:hover {
+    color: #2563EB;       /* Berubah jadi Biru */
+    text-decoration: underline; /* Ada garis bawah */
+    cursor: pointer;
+}
+
+/* Khusus Tombol Daftar agar sedikit lebih menonjol */
+QPushButton#btnKeDaftar {
+    font-weight: 700;     /* Lebih tebal dikit */
+    margin-top: 15px;     /* Jarak dari tombol Masuk */
+}</string>
+   </property>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="QFrame" name="cardLogin">
+      <property name="minimumSize">
+       <size>
+        <width>400</width>
+        <height>450</height>
+       </size>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::Shape::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Shadow::Raised</enum>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLabel" name="lblJudul">
+         <property name="text">
+          <string>GURU PRO</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblSubJudul">
+         <property name="text">
+          <string>Silakan buat akun untuk melanjutkan</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="inputUser">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="placeholderText">
+          <string>Username / NIP</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="inputPass">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="placeholderText">
+          <string>Kata Sandi</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnLogin">
+         <property name="text">
+          <string>Masuk Aplikasi</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnKeDaftar">
+         <property name="text">
+          <string>Belum punya akun? Daftar Sekarang</string>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnLupaPass">
+         <property name="text">
+          <string>Lupa password? Hubungi admin</string>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>866</width>
+     <height>33</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

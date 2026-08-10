@@ -1,0 +1,183 @@
+/* ============================================================
+   GURUPRO MOBILE - FINAL SYNC HP
+   ============================================================ */
+
+:root {
+    --primary: #2563EB;
+    --primary-dark: #1E40AF;
+    --bg-light: #F8FAFC;
+    --white: #FFFFFF;
+    --text-main: #1E293B;
+    --text-muted: #64748B;
+    --success: #22C55E;
+    --danger: #EF4444;
+    --nav-height: 70px;
+}
+
+/* 1. RESET & BASE */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background-color: var(--bg-light);
+    color: var(--text-main);
+    padding-bottom: 150px; /* Ruang agar konten tidak tertutup navigasi */
+}
+
+/* 2. HEADER */
+.main-header, .top-bar, .top-header {
+    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* 3. SISTEM HALAMAN (PENTING!) */
+.page, .app-page {
+    display: none; /* Sembunyikan semua secara default */
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.page.active, .app-page.active {
+    display: block; /* Hanya tampilkan yang aktif */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 4. DASHBOARD CARDS */
+.welcome-card, .card-welcome {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 15px;
+    border-left: 6px solid var(--primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.stat-container, .stats-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.stat-card, .stat-item {
+    background: white;
+    flex: 1;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.stat-num, .stat-value {
+    display: block;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+/* 5. DAFTAR KELAS & SISWA */
+.card-kelas, .siswa-row {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #E2E8F0;
+}
+
+/* 6. INPUT PERTEMUAN */
+.pertemuan-box, .pertemuan-input, .pertemuan-selector {
+    background: #DBEAFE;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+}
+
+.pertemuan-box input, .pertemuan-input input {
+    width: 60px;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--primary);
+    text-align: center;
+    font-weight: 800;
+}
+
+/* 7. TOMBOL SIMPAN (STICKY DI ATAS NAV) */
+.action-footer, .save-area, .sticky-action {
+    position: fixed;
+    bottom: 80px; /* Di atas Bottom Nav */
+    left: 0;
+    right: 0;
+    padding: 10px 20px;
+    z-index: 900;
+}
+
+.btn-primary, .btn-primary-action, #btnSimpan {
+    width: 100%;
+    padding: 16px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 15px;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+/* 8. BOTTOM NAVIGATION (PALING DEPAN) */
+.bottom-nav, .bottom-navbar, .bottom-tabs {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--nav-height);
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 1px solid #E2E8F0;
+    z-index: 2000; /* Paling Tinggi */
+}
+
+.nav-item, .nav-btn, .tab-item {
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.nav-item.active, .nav-btn.active, .tab-item.active {
+    color: var(--primary);
+}
+
+.nav-item span, .nav-btn span, .tab-item span {
+    font-size: 10px;
+    margin-top: 4px;
+}

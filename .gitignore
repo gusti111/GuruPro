@@ -1,0 +1,12 @@
+build/
+dist/
+*.spec
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Secrets & Local Configurations
+json/
+*.json
+*.txt

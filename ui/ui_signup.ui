@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>866</width>
+    <height>615</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="bgSignUp">
+   <property name="styleSheet">
+    <string notr="true">/* ============================================================
+   HALAMAN SIGN UP / REGISTRASI (GURU PRO - FINAL)
+   ============================================================ */
+
+/* 1. BACKGROUND UTAMA (BIRU SOLID) */
+/* PENTING: Pastikan objectName background kamu diubah jadi 'bgSignUp' */
+QWidget#bgSignUp {
+    background-color: #2563EB; /* Biru Branding */
+}
+
+/* 2. KARTU FORM (PUTIH MELAYANG) */
+/* Pastikan objectName frame kartu kamu: cardSignUp */
+QFrame#cardSignUp {
+    background-color: #FFFFFF;
+    border-radius: 20px;       /* Sudut membulat */
+    border: 1px solid #E2E8F0;
+    
+    /* Efek Bayangan Timbul di Bawah */
+    border-bottom: 6px solid #1E40AF; 
+}
+
+/* 3. HEADER TEKS (JUDUL) */
+QLabel#lblJudul {
+    color: #2563EB;        /* Biru */
+    font-family: &quot;Segoe UI&quot;, sans-serif;
+    font-size: 28px;
+    font-weight: 900;      /* Extra Bold */
+    qproperty-alignment: AlignCenter;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+QLabel#lblSubJudul {
+    color: #64748B;        /* Abu-abu Slate */
+    font-size: 13px;
+    qproperty-alignment: AlignCenter;
+    margin-bottom: 20px;
+}
+
+/* 4. INPUT FIELD (SEMUA KOTAK ISIAN) */
+/* Ini otomatis berlaku untuk Nama, NIP, Mapel, &amp; Password */
+QLineEdit {
+    background-color: #F8FAFC;   /* Abu sangat muda */
+    border: 1px solid #CBD5E1;   /* Garis tepi halus */
+    border-radius: 10px;
+    padding: 10px 15px;          /* Jarak teks ke dalam */
+    font-size: 13px;
+    color: #1E293B;              /* Teks gelap */
+    font-weight: 600;
+    margin-bottom: 10px;         /* Jarak antar kolom input */
+}
+
+/* Efek saat kolom diklik/diketik (Fokus) */
+QLineEdit:focus {
+    border: 2px solid #2563EB;   /* Bingkai berubah Biru */
+    background-color: #FFFFFF;   /* Background jadi Putih bersih */
+}
+
+/* 5. TOMBOL DAFTAR (TOMBOL UTAMA) */
+QPushButton#btnDaftar {
+    background-color: #2563EB;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 800;    /* Tebal */
+    padding: 12px;
+    margin-top: 10px;
+    letter-spacing: 0.5px;
+}
+
+/* Efek Hover Tombol Daftar */
+QPushButton#btnDaftar:hover {
+    background-color: #1D4ED8; /* Biru lebih gelap */
+    margin-top: 12px;          /* Efek tombol ditekan ke bawah */
+    padding-bottom: 10px;
+    border-bottom: none;
+}
+QPushButton#btnDaftar:pressed {
+    background-color: #1E3A8A;
+}
+
+/* 6. TOMBOL KEMBALI KE LOGIN (LINK STYLE) */
+/* Pastikan ini PushButton, bukan Label */
+QPushButton#btnKembaliLogin {
+    background-color: transparent;
+    border: none;
+    color: #94A3B8;      /* Abu-abu soft */
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* Efek saat mouse diarahkan ke teks login */
+QPushButton#btnKembaliLogin:hover {
+    color: #2563EB;             /* Berubah Biru */
+    text-decoration: underline; /* Garis bawah */
+    cursor: pointer;
+}</string>
+   </property>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="QFrame" name="cardSignUp">
+      <property name="minimumSize">
+       <size>
+        <width>400</width>
+        <height>450</height>
+       </size>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::Shape::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Shadow::Raised</enum>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLabel" name="lblJudul">
+         <property name="text">
+          <string>GURU PRO</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblSubJudul">
+         <property name="text">
+          <string>Silakan buat akun untuk melanjutkan</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="inputNamaReg">
+         <property name="placeholderText">
+          <string>Nama Lengkap</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="inputNipReg">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="placeholderText">
+          <string>NIP</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="inputMapelReg">
+         <property name="placeholderText">
+          <string>Mata Pelajaran</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="inputPassReg">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="placeholderText">
+          <string>Kata Sandi</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDaftar">
+         <property name="text">
+          <string>Buat Akun</string>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnKembaliLogin">
+         <property name="text">
+          <string>Sudah punya akun? Login</string>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>866</width>
+     <height>33</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
