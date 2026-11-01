@@ -148,6 +148,12 @@ class RegisterWindow(QMainWindow):
         if not data_baru["nama_lengkap"] or not data_baru["nip"]:
             QMessageBox.warning(self, "Data Kurang", "Mohon lengkapi data profil!")
             return
+        if not data_baru["nip"].isdigit() or not (5 <= len(data_baru["nip"]) <= 32):
+            QMessageBox.warning(self, "NIP Tidak Valid", "NIP harus terdiri dari 5–32 digit angka.")
+            return
+        if not (10 <= len(data_baru["password"]) <= 128):
+            QMessageBox.warning(self, "Password Tidak Valid", "Password harus terdiri dari 10–128 karakter.")
+            return
 
         sukses, pesan = database.daftar_guru_baru(data_baru)
         if sukses:
