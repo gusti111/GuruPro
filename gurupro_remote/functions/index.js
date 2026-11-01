@@ -173,14 +173,23 @@ async function ownedClass(classId, claims) {
   const data = snap.exists ? snap.data() : null;
   const owned = data && (data.uid ? data.uid === claims.uid : data.nip_guru === claims.nip);
   if (!owned) fail(404, "Kelas tidak ditemukan.", "class_not_found");
+  if (!data.uid) {
+    await ref.update({ uid: claims.uid, migrated_owner_at: now() });
+    data.uid = claims.uid;
+  }
   return { ref, data };
 }
 
 async function listClasses(claims) {
   const snap = await db.collection("kelas").where("nip_guru", "==", claims.nip).get();
-  return snap.docs
-    .filter((doc) => !doc.data().uid || doc.data().uid === claims.uid)
-    .map((doc) => ({ id: doc.id, ...doc.data() }));
+  const visible = snap.docs.filter((doc) => !doc.data().uid || doc.data().uid === claims.uid);
+  const legacy = visible.filter((doc) => !doc.data().uid);
+  if (legacy.length) {
+    const batch = db.batch();
+    legacy.forEach((doc) => batch.update(doc.ref, { uid: claims.uid, migrated_owner_at: now() }));
+    await batch.commit();
+  }
+  return visible.map((doc) => ({ id: doc.id, ...doc.data(), uid: claims.uid }));
 }
 
 async function listStudents(classId, claims) {
