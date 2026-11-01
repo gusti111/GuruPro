@@ -13,6 +13,9 @@ on:
     paths:
       - "backend/**"
       - "tests/**"
+      - "main.py"
+      - "controllers/**"
+      - "ui/**"
       - ".github/workflows/python-tests.yml"
 
 jobs:
