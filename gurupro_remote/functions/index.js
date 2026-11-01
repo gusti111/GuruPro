@@ -289,53 +289,61 @@ async function createPairing(claims) {
 }
 
 async function redeemPairing(pairingToken, deviceName) {
-  if (typeof pairingToken !== "string" || pairingToken.length < 30 || pairingToken.length > 200) fail(400, "Kode pairing tidak valid.", "invalid_pairing");
-  const ref = db.collection("remote_pairings").doc(sha256(pairingToken));
+  if (typeof pairingToken !== "string" || pairingToken.length < 30 || pairingToken.length > 200) {
+    fail(400, "Kode pairing tidak valid.", "invalid_pairing");
+  }
+  const pairingRef = db.collection("remote_pairings").doc(sha256(pairingToken));
   let pair;
   await db.runTransaction(async (tx) => {
-    const snap = await tx.get(ref);
+    const snap = await tx.get(pairingRef);
     if (!snap.exists) fail(401, "Kode pairing tidak ditemukan atau sudah digunakan.", "pairing_unavailable");
     pair = snap.data();
-    if (pair.used || pair.expires_at.toMillis() < Date.now()) fail(401, "Kode pairing kedaluwarsa atau sudah digunakan.", "pairing_expired");
-    tx.update(ref, { used: true, used_at: now() });
+    if (pair.used || !pair.expires_at || pair.expires_at.toMillis() < Date.now()) {
+      fail(401, "Kode pairing kedaluwarsa atau sudah digunakan.", "pairing_expired");
+    }
+    // Consume the one-time bearer token atomically before provisioning a device.
+    tx.update(pairingRef, { used: true, used_at: now() });
   });
-  const sessionRef = db.collection("remote_sessions").doc(pair.session_id);
-  const sessionSnap = await sessionRef.get();
-  if (!sessionSnap.exists || sessionSnap.data().uid !== pair.uid || sessionSnap.data().status !== "waiting") fail(401, "Sesi pairing tidak lagi tersedia.", "session_unavailable");
-  const userSnap = await db.collection("users").doc(pair.uid).get();
-  if (!userSnap.exists) fail(401, "Akun tidak ditemukan.", "account_missing");
-  const user = userSnap.data();
-  await sessionRef.update({
-    status: "connected", connected_device: cleanString(deviceName, 60) || "Perangkat",
-    custom_name: cleanString(deviceName, 60) || "Perangkat", last_update: now(),
-  });
-  const deviceUid = "remote_" + pair.session_id;
-  const claims = {
-    nip: pair.nip,
-    role: user.role || "guru",
-    client: "remote",
-    ownerUid: pair.uid,
-    sid: pair.session_id,
-  };
 
-  // Each remote device gets its own Firebase Auth identity. Persistent custom
-  // claims keep this device bound to one owner/session across ID-token refreshes.
-  await auth.createUser({ uid: deviceUid, disabled: false });
+  const sessionRef = db.collection("remote_sessions").doc(pair.session_id);
+  const deviceUid = "remote_" + pair.session_id;
   try {
+    const sessionSnap = await sessionRef.get();
+    if (!sessionSnap.exists || sessionSnap.data().uid !== pair.uid || sessionSnap.data().status !== "waiting") {
+      fail(401, "Sesi pairing tidak lagi tersedia.", "session_unavailable");
+    }
+    if (sessionSnap.data().expires_at && sessionSnap.data().expires_at.toMillis() < Date.now()) {
+      fail(401, "Sesi pairing telah kedaluwarsa.", "pairing_expired");
+    }
+    const userSnap = await db.collection("users").doc(pair.uid).get();
+    if (!userSnap.exists || userSnap.data().nip !== pair.nip) fail(401, "Akun tidak ditemukan.", "account_missing");
+    const user = userSnap.data();
+    const deviceLabel = cleanString(deviceName, 60) || "Perangkat";
+    const claims = {
+      nip: pair.nip,
+      role: user.role || "guru",
+      client: "remote",
+      ownerUid: pair.uid,
+      sid: pair.session_id,
+    };
+
+    // Provision identity and claims before publishing the session as connected.
+    await auth.createUser({ uid: deviceUid, disabled: false });
     await auth.setCustomUserClaims(deviceUid, claims);
+    const identity = await issueIdentityToken(deviceUid);
     await sessionRef.update({
       status: "connected",
       device_uid: deviceUid,
-      connected_device: cleanString(deviceName, 60) || "Perangkat",
-      custom_name: cleanString(deviceName, 60) || "Perangkat",
+      connected_device: deviceLabel,
+      custom_name: deviceLabel,
       last_update: now(),
       expires_at: admin.firestore.Timestamp.fromMillis(Date.now() + 12 * 60 * 60 * 1000),
     });
-    const identity = await issueIdentityToken(deviceUid);
     return { ...identity, sessionId: pair.session_id, profile: publicProfile(user, pair.uid) };
   } catch (error) {
+    // Never leave a partially provisioned device/session alive after a failed redeem.
     await sessionRef.update({ status: "disconnected", last_update: now() }).catch(() => {});
-    await auth.deleteUser(deviceUid).catch(() => {});
+    await revokeAndDeleteAuthUser(deviceUid).catch(() => {});
     throw error;
   }
 }
