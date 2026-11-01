@@ -108,6 +108,17 @@ class SecurityArchitectureTests(unittest.TestCase):
         self.assertIn("duplicate_student_nis", source)
         self.assertIn("1–2.000 baris", source)
 
+    def test_student_import_normalizes_gender_variants(self):
+        source = self.read("gurupro_remote/functions/index.js")
+        self.assertIn('toLocaleLowerCase("id-ID")', source)
+        self.assertIn('"laki laki": "L"', source)
+        self.assertIn("perempuan: \"P\"", source)
+
+    def test_attendance_rejects_missing_hadiran_score(self):
+        source = self.read("gurupro_remote/functions/index.js")
+        self.assertIn("student.nilai === null || student.nilai === undefined", source)
+        self.assertIn("Nilai siswa wajib diisi untuk status Hadir.", source)
+
     def test_firestore_rules_fail_closed_for_client_sdk(self):
         rules = self.read("gurupro_remote/firestore.rules")
         self.assertIn("allow read, write: if false;", rules)
