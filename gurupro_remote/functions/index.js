@@ -491,6 +491,18 @@ async function handleAction(action, body, claims, req) {
       if (!verifyPassword(oldPassword, user.data.password || "").valid) fail(401, "Password saat ini tidak cocok.", "invalid_current_password");
       await user.ref.update({ password: hashPassword(newPassword), password_changed_at: now() });
       await auth.revokeRefreshTokens(claims.uid);
+
+      // A credential change also ends all paired remote sessions for this owner.
+      const sessions = await db.collection("remote_sessions").where("uid", "==", claims.uid).get();
+      for (const doc of sessions.docs) {
+        const deviceUid = doc.data().device_uid;
+        await doc.ref.update({ status: "disconnected_by_host", last_update: now() });
+        try {
+          await revokeAndDeleteAuthUser(deviceUid);
+        } catch (error) {
+          console.error("Device revocation deferred after password change:", doc.id, error);
+        }
+      }
       return { success: true, reauthenticate: true };
     }
     case "class.create": {
@@ -531,12 +543,24 @@ async function handleAction(action, body, claims, req) {
     case "students.import": {
       await requireDesktop(claims);
       const owned = await ownedClass(body.classId, claims);
-      if (!Array.isArray(body.students) || body.students.length > 2000) fail(400, "Data siswa tidak valid (maksimal 2.000).", "invalid_students");
-      const rows = body.students.map((row) => ({
-        nis: cleanString(String(row.nis || ""), 40),
-        nama: cleanString(row.nama, 150),
-        gender: cleanString(row.gender, 20),
-      })).filter((row) => row.nis && row.nama);
+      if (!Array.isArray(body.students) || body.students.length === 0 || body.students.length > 2000) {
+        fail(400, "Data siswa tidak valid (1–2.000 baris).", "invalid_students");
+      }
+      const seenNis = new Set();
+      const rows = body.students.map((row) => {
+        if (!row || typeof row !== "object" || Array.isArray(row)) {
+          fail(400, "Format baris siswa tidak valid.", "invalid_student_row");
+        }
+        const nis = cleanString(String(row.nis || ""), 40);
+        const nama = cleanString(row.nama, 150);
+        const gender = cleanString(row.gender, 20);
+        if (!nis || !nama || !["L", "P", "Laki-laki", "Perempuan"].includes(gender)) {
+          fail(400, "NIS, nama, dan jenis kelamin setiap siswa wajib valid.", "invalid_student_row");
+        }
+        if (seenNis.has(nis)) fail(400, "Terdapat NIS ganda di file impor.", "duplicate_student_nis");
+        seenNis.add(nis);
+        return { nis, nama, gender };
+      });
       for (let i = 0; i < rows.length; i += 400) {
         const batch = db.batch();
         rows.slice(i, i + 400).forEach((row) => batch.set(owned.ref.collection("siswa").doc(row.nis), row));
