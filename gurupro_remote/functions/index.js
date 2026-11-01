@@ -72,8 +72,10 @@ function authServiceUrl(service, path) {
   return base + path + "?key=" + encodeURIComponent(key);
 }
 
-async function issueIdentityToken(uid, claims) {
-  const customToken = await auth.createCustomToken(uid, claims);
+async function issueIdentityToken(uid) {
+  // Client type and owner/session mapping live in persistent Auth custom claims
+  // on this UID, so they survive refresh-token exchanges.
+  const customToken = await auth.createCustomToken(uid);
   const url = authServiceUrl("identitytoolkit", "accounts:signInWithCustomToken");
   const response = await fetch(url, {
     method: "POST",
@@ -109,7 +111,7 @@ async function ensureAuthUser(uid, nip, role) {
     if (error.code !== "auth/user-not-found") throw error;
     await auth.createUser({ uid, disabled: false });
   }
-  await auth.setCustomUserClaims(uid, { nip, role });
+  await auth.setCustomUserClaims(uid, { nip, role, client: "desktop" });
   await db.collection("users").doc(uid).set({ uid, nip, role }, { merge: true });
 }
 
@@ -131,16 +133,25 @@ async function bearerClaims(req, expectedClient) {
   let decoded;
   try { decoded = await auth.verifyIdToken(match[1], true); }
   catch { fail(401, "Sesi tidak valid atau sudah kedaluwarsa.", "invalid_token"); }
-  if (!decoded.nip || !decoded.role || (expectedClient && decoded.client !== expectedClient)) fail(403, "Akses tidak diizinkan.", "forbidden");
-  await getUser(decoded.uid, decoded);
+  if (!decoded.nip || !decoded.role || !["desktop", "remote"].includes(decoded.client) ||
+      (expectedClient && decoded.client !== expectedClient)) {
+    fail(403, "Akses tidak diizinkan.", "forbidden");
+  }
+
   if (decoded.client === "remote") {
     const sid = cleanString(decoded.sid, 128);
-    if (!sid) fail(403, "Sesi perangkat tidak valid.", "invalid_remote_session");
+    const ownerUid = cleanString(decoded.ownerUid, 128);
+    if (!sid || !ownerUid) fail(403, "Sesi perangkat tidak valid.", "invalid_remote_session");
+    await getUser(ownerUid, decoded);
     const session = await db.collection("remote_sessions").doc(sid).get();
-    if (!session.exists || session.data().uid !== decoded.uid || session.data().status !== "connected" ||
-        (session.data().expires_at && session.data().expires_at.toMillis() < Date.now())) {
+    const sessionData = session.exists ? session.data() : null;
+    if (!sessionData || sessionData.uid !== ownerUid || sessionData.device_uid !== decoded.uid ||
+        sessionData.status !== "connected" ||
+        (sessionData.expires_at && sessionData.expires_at.toMillis() < Date.now())) {
       fail(401, "Sesi perangkat telah dihentikan atau kedaluwarsa.", "remote_session_ended");
     }
+  } else {
+    await getUser(decoded.uid, decoded);
   }
   return decoded;
 }
@@ -151,25 +162,27 @@ async function ownedClass(classId, claims) {
   const ref = db.collection("kelas").doc(id);
   const snap = await ref.get();
   const data = snap.exists ? snap.data() : null;
-  const owned = data && (data.uid ? data.uid === claims.uid : data.nip_guru === claims.nip);
+  const ownerUid = claims.ownerUid || claims.uid;
+  const owned = data && (data.uid ? data.uid === ownerUid : data.nip_guru === claims.nip);
   if (!owned) fail(404, "Kelas tidak ditemukan.", "class_not_found");
   if (!data.uid) {
-    await ref.update({ uid: claims.uid, migrated_owner_at: now() });
-    data.uid = claims.uid;
+    await ref.update({ uid: ownerUid, migrated_owner_at: now() });
+    data.uid = ownerUid;
   }
   return { ref, data };
 }
 
 async function listClasses(claims) {
   const snap = await db.collection("kelas").where("nip_guru", "==", claims.nip).get();
-  const visible = snap.docs.filter((doc) => !doc.data().uid || doc.data().uid === claims.uid);
+  const ownerUid = claims.ownerUid || claims.uid;
+  const visible = snap.docs.filter((doc) => !doc.data().uid || doc.data().uid === ownerUid);
   const legacy = visible.filter((doc) => !doc.data().uid);
   for (let i = 0; i < legacy.length; i += 400) {
     const batch = db.batch();
-    legacy.slice(i, i + 400).forEach((doc) => batch.update(doc.ref, { uid: claims.uid, migrated_owner_at: now() }));
+    legacy.slice(i, i + 400).forEach((doc) => batch.update(doc.ref, { uid: ownerUid, migrated_owner_at: now() }));
     await batch.commit();
   }
-  return visible.map((doc) => ({ id: doc.id, ...doc.data(), uid: claims.uid }));
+  return visible.map((doc) => ({ id: doc.id, ...doc.data(), uid: ownerUid }));
 }
 
 async function listStudents(classId, claims) {
@@ -211,7 +224,7 @@ async function saveAttendance(payload, claims) {
     catatan_jurnal: cleanString(payload.catatan_jurnal, 2000),
     tanggal: now(), data_siswa: safeStudents,
     sumber: cleanString(payload.sumber, 40) || "Desktop",
-    nip_guru: claims.nip, uid: claims.uid,
+    nip_guru: claims.nip, uid: claims.ownerUid || claims.uid,
   });
   return { id: ref.id, message: query.empty ? "Data absensi berhasil disimpan!" : "Data absensi diperbarui!" };
 }
@@ -265,9 +278,34 @@ async function redeemPairing(pairingToken, deviceName) {
     status: "connected", connected_device: cleanString(deviceName, 60) || "Perangkat",
     custom_name: cleanString(deviceName, 60) || "Perangkat", last_update: now(),
   });
-  const claims = { nip: pair.nip, role: user.role || "guru", client: "remote", sid: pair.session_id };
-  const identity = await issueIdentityToken(pair.uid, claims);
-  return { ...identity, sessionId: pair.session_id, profile: publicProfile(user, pair.uid) };
+  const deviceUid = "remote_" + pair.session_id;
+  const claims = {
+    nip: pair.nip,
+    role: user.role || "guru",
+    client: "remote",
+    ownerUid: pair.uid,
+    sid: pair.session_id,
+  };
+
+  // Each remote device gets its own Firebase Auth identity. Persistent custom
+  // claims keep this device bound to one owner/session across ID-token refreshes.
+  await auth.createUser({ uid: deviceUid, disabled: false });
+  try {
+    await auth.setCustomUserClaims(deviceUid, claims);
+    await sessionRef.update({
+      status: "connected",
+      device_uid: deviceUid,
+      connected_device: cleanString(deviceName, 60) || "Perangkat",
+      custom_name: cleanString(deviceName, 60) || "Perangkat",
+      last_update: now(),
+    });
+    const identity = await issueIdentityToken(deviceUid);
+    return { ...identity, sessionId: pair.session_id, profile: publicProfile(user, pair.uid) };
+  } catch (error) {
+    await sessionRef.update({ status: "disconnected", last_update: now() }).catch(() => {});
+    await auth.deleteUser(deviceUid).catch(() => {});
+    throw error;
+  }
 }
 
 async function handleAction(action, body, claims, req) {
@@ -328,7 +366,7 @@ async function handleAction(action, body, claims, req) {
       if (verified.legacy) await userDoc.ref.update({ password: hashPassword(password) });
       const role = cleanString(user.role, 30) || "guru";
       await ensureAuthUser(userDoc.id, nip, role);
-      const identity = await issueIdentityToken(userDoc.id, { nip, role, client: "desktop" });
+      const identity = await issueIdentityToken(userDoc.id);
       return { ...identity, profile: publicProfile(user, userDoc.id) };
     }
     case "remote.redeem":
@@ -342,11 +380,17 @@ async function handleAction(action, body, claims, req) {
       const decoded = await auth.verifyIdToken(refreshed.idToken, true);
       if (decoded.client === "remote") {
         const sid = cleanString(decoded.sid, 128);
+        const ownerUid = cleanString(decoded.ownerUid, 128);
         const session = await db.collection("remote_sessions").doc(sid).get();
-        if (!session.exists || session.data().uid !== decoded.uid || session.data().status !== "connected" ||
-            (session.data().expires_at && session.data().expires_at.toMillis() < Date.now())) {
+        const sessionData = session.exists ? session.data() : null;
+        if (!sessionData || sessionData.uid !== ownerUid || sessionData.device_uid !== decoded.uid ||
+            sessionData.status !== "connected" ||
+            (sessionData.expires_at && sessionData.expires_at.toMillis() < Date.now())) {
           fail(401, "Sesi perangkat telah dihentikan atau kedaluwarsa.", "remote_session_ended");
         }
+        await getUser(ownerUid, decoded);
+      } else {
+        await getUser(decoded.uid, decoded);
       }
       return refreshed;
     }
@@ -484,14 +528,14 @@ async function handleAction(action, body, claims, req) {
       await requireDesktop(claims);
       const ref = db.collection("remote_sessions").doc(cleanString(body.sessionId, 128));
       const snap = await ref.get();
-      if (!snap.exists || ((snap.data().uid ? snap.data().uid !== claims.uid : snap.data().nip !== claims.nip))) return null;
+      if (!snap.exists || ((snap.data().uid ? snap.data().uid !== (claims.ownerUid || claims.uid) : snap.data().nip !== claims.nip))) return null;
       return { id: snap.id, ...snap.data() };
     }
     case "remote.session.update": {
       await requireDesktop(claims);
       const ref = db.collection("remote_sessions").doc(cleanString(body.sessionId, 128));
       const snap = await ref.get();
-      if (!snap.exists || ((snap.data().uid ? snap.data().uid !== claims.uid : snap.data().nip !== claims.nip))) fail(404, "Sesi tidak ditemukan.", "session_not_found");
+      if (!snap.exists || ((snap.data().uid ? snap.data().uid !== (claims.ownerUid || claims.uid) : snap.data().nip !== claims.nip))) fail(404, "Sesi tidak ditemukan.", "session_not_found");
       const changes = {};
       if (typeof body.custom_name === "string") changes.custom_name = cleanString(body.custom_name, 60);
       if (["disconnected_by_host", "disconnected"].includes(body.status)) changes.status = body.status;
@@ -505,7 +549,7 @@ async function handleAction(action, body, claims, req) {
       await requireDesktop(claims);
       const ref = db.collection("remote_sessions").doc(cleanString(body.sessionId, 128));
       const snap = await ref.get();
-      if (!snap.exists || ((snap.data().uid ? snap.data().uid !== claims.uid : snap.data().nip !== claims.nip))) fail(404, "Sesi tidak ditemukan.", "session_not_found");
+      if (!snap.exists || ((snap.data().uid ? snap.data().uid !== (claims.ownerUid || claims.uid) : snap.data().nip !== claims.nip))) fail(404, "Sesi tidak ditemukan.", "session_not_found");
       await ref.delete();
       return { success: true };
     }
@@ -530,17 +574,22 @@ async function handleAction(action, body, claims, req) {
     case "remote.session": {
       await requireRemote(claims);
       const session = await db.collection("remote_sessions").doc(claims.sid).get();
-      if (!session.exists || session.data().uid !== claims.uid) fail(401, "Sesi perangkat tidak tersedia.", "remote_session_ended");
+      if (!session.exists || session.data().uid !== claims.ownerUid || session.data().device_uid !== claims.uid) {
+        fail(401, "Sesi perangkat tidak tersedia.", "remote_session_ended");
+      }
       return { id: session.id, ...session.data() };
     }
     case "remote.heartbeat":
       await requireRemote(claims);
       await db.collection("remote_sessions").doc(claims.sid).update({ last_update: now() });
       return { success: true };
-    case "remote.logout":
+    case "remote.logout": {
       await requireRemote(claims);
       await db.collection("remote_sessions").doc(claims.sid).update({ status: "disconnected", last_update: now() });
+      await auth.revokeRefreshTokens(claims.uid).catch(() => {});
+      await auth.deleteUser(claims.uid).catch(() => {});
       return { success: true };
+    }
     case "remote.classes": {
       await requireRemote(claims);
       const classes = await listClasses(claims);
@@ -564,9 +613,11 @@ async function handleAction(action, body, claims, req) {
       await db.collection("remote_sessions").doc(claims.sid).update({ last_command: "refresh_ui", last_update: now() });
       return result;
     }
-    case "remote.profile":
+    case "remote.profile": {
       await requireRemote(claims);
-      return publicProfile((await getUser(claims.uid, claims)).data, claims.uid);
+      const ownerUid = claims.ownerUid || claims.uid;
+      return publicProfile((await getUser(ownerUid, claims)).data, ownerUid);
+    }
     default:
       fail(404, "Aksi API tidak dikenal.", "unknown_action");
   }
