@@ -1,3 +1,4 @@
+const { before, after, beforeEach, describe, it } = require("node:test");
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require("@firebase/rules-unit-testing");
