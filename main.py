@@ -187,6 +187,7 @@ class DashboardWindow(QMainWindow):
         except: pass
         
         self.user = user_data
+        self._session_closed = False
         
         # Tampilkan Nama di Sidebar
         self.lblNamaUser.setText(self.user.get('nama_lengkap', 'Guru'))
@@ -268,10 +269,23 @@ class DashboardWindow(QMainWindow):
 
     def logout(self):
         if QMessageBox.question(self, "Keluar", "Yakin ingin keluar?") == QMessageBox.StandardButton.Yes:
-            database.logout()
+            sukses, pesan = database.logout()
+            self._session_closed = True
+            if not sukses:
+                QMessageBox.warning(self, "Logout Sebagian", pesan)
             self.login = LoginWindow()
             self.login.show()
             self.close()
+
+    def closeEvent(self, event):
+        # Revoke the desktop refresh-token family even when the window close
+        # control is used instead of the sidebar logout button.
+        if not getattr(self, "_session_closed", False):
+            sukses, pesan = database.logout()
+            self._session_closed = True
+            if not sukses:
+                print(f"Peringatan logout: {pesan}")
+        event.accept()
 
 # ==========================================================
 # EKSEKUSI UTAMA
