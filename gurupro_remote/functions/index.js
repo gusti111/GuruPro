@@ -42,36 +42,7 @@ function fail(status, message, code = "request_failed") {
   throw error;
 }
 
-function hashPassword(password) {
-  const salt = crypto.randomBytes(16);
-  const iterations = 600000;
-  const digest = crypto.pbkdf2Sync(password, salt, iterations, 32, "sha256");
-  return "pbkdf2_sha256$" + iterations + "$" + salt.toString("hex") + "$" + digest.toString("hex");
-}
-
-function verifyPassword(password, stored) {
-  if (typeof password !== "string" || typeof stored !== "string" || !password || !stored) {
-    return { valid: false, legacy: false };
-  }
-  if (!stored.startsWith("pbkdf2_sha256$")) {
-    const a = Buffer.from(password, "utf8");
-    const b = Buffer.from(stored, "utf8");
-    return { valid: a.length === b.length && crypto.timingSafeEqual(a, b), legacy: true };
-  }
-  try {
-    const [algorithm, roundsText, saltHex, digestHex] = stored.split("$");
-    const rounds = Number(roundsText);
-    if (algorithm !== "pbkdf2_sha256" || !Number.isInteger(rounds) || rounds < 100000 || rounds > 1000000 ||
-        !/^[0-9a-f]{32}$/.test(saltHex) || !/^[0-9a-f]{64}$/.test(digestHex)) {
-      return { valid: false, legacy: false };
-    }
-    const expected = Buffer.from(digestHex, "hex");
-    const actual = crypto.pbkdf2Sync(password, Buffer.from(saltHex, "hex"), rounds, 32, "sha256");
-    return { valid: crypto.timingSafeEqual(actual, expected), legacy: false };
-  } catch {
-    return { valid: false, legacy: false };
-  }
-}
+const { hashPassword, verifyPassword } = require("./password_utils");
 
 function publicProfile(data, uid) {
   const safe = { ...(data || {}) };
