@@ -56,6 +56,14 @@ class SecurityArchitectureTests(unittest.TestCase):
                     self.assertNotIn(marker, source)
             self.assertIn('fetch(API_URL', source) if relative_path.endswith("remote-app.js") else None
 
+    def test_server_requires_one_time_approved_nip_and_per_device_auth(self):
+        functions = self.read("gurupro_remote/functions/index.js")
+        self.assertIn('db.collection("approved_nips").doc(nip)', functions)
+        self.assertIn("tx.delete(approvalRef)", functions)
+        self.assertIn("auth.setCustomUserClaims(deviceUid, claims)", functions)
+        self.assertIn("cleanupExpiredRemoteSessions", functions)
+        self.assertIn("auth.deleteUser(deviceUid)", functions)
+
     def test_firestore_rules_fail_closed_for_client_sdk(self):
         rules = self.read("gurupro_remote/firestore.rules")
         self.assertIn("allow read, write: if false;", rules)
