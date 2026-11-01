@@ -49,55 +49,96 @@ if db is None:
 # ==============================================================================
 # 1. FITUR AKUN (LOGIN, DAFTAR & PROFIL)
 # ==============================================================================
-def cek_login(nip, password):
-    """ Mengecek kredensial login guru """
-    if db is None: return False, "Database belum terhubung."
-    try:
-        users_ref = db.collection('users')
-        query = users_ref.where(filter=FieldFilter("nip", "==", nip)).where(filter=FieldFilter("password", "==", password)).limit(1).stream()
+def _hash_password(password):
+    """Hash password with PBKDF2-HMAC-SHA256 and a unique random salt."""
+    import hashlib
+    import secrets
+    iterations = 600_000
+    salt = secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
+    return f"pbkdf2_sha256${iterations}${salt.hex()}${digest.hex()}"
 
-        for doc in query:
-            user_data = doc.to_dict()
-            user_data['doc_id'] = doc.id 
+def _verify_password(password, stored_value):
+    """Verify modern hashes; support legacy plaintext only for one-time migration."""
+    import hashlib
+    import hmac
+    if not isinstance(stored_value, str):
+        return False, False
+    if not stored_value.startswith("pbkdf2_sha256$"):
+        return hmac.compare_digest(password, stored_value), True
+    try:
+        algorithm, iterations, salt_hex, digest_hex = stored_value.split("$", 3)
+        if algorithm != "pbkdf2_sha256":
+            return False, False
+        candidate = hashlib.pbkdf2_hmac(
+            "sha256", password.encode("utf-8"), bytes.fromhex(salt_hex), int(iterations)
+            ).hex()
+        return hmac.compare_digest(candidate, digest_hex), False
+    except (ValueError, TypeError):
+        return False, False
+
+def cek_login(nip, password):
+    """Validate credentials and migrate legacy plaintext after successful login."""
+    if db is None:
+        return False, "Database belum terhubung."
+    try:
+        docs = db.collection("users").where(
+            filter=FieldFilter("nip", "==", nip)
+        ).limit(1).stream()
+        for doc in docs:
+            user_data = doc.to_dict() or {}
+            valid, is_legacy = _verify_password(password, user_data.get("password", ""))
+            if not valid:
+                return False, "NIP atau Kata Sandi salah!"
+            if is_legacy:
+                doc.reference.update({"password": _hash_password(password)})
+                user_data["password"] = None
+            user_data["doc_id"] = doc.id
             return True, user_data
         return False, "NIP atau Kata Sandi salah!"
     except Exception as e:
         return False, f"Error System: {e}"
 
 def daftar_guru_baru(data_guru):
-    """ Menambahkan akun guru baru ke koleksi 'users' """
-    if db is None: return False, "Database belum terhubung."
+    """Register an account with a salted password hash, not plaintext."""
+    if db is None:
+        return False, "Database belum terhubung."
     try:
-        users_ref = db.collection('users')
-        cek_nip = users_ref.where(filter=FieldFilter("nip", "==", data_guru['nip'])).get()
+        users_ref = db.collection("users")
+        cek_nip = users_ref.where(
+            filter=FieldFilter("nip", "==", data_guru["nip"])
+        ).limit(1).get()
         if len(list(cek_nip)) > 0:
             return False, "NIP ini sudah terdaftar!"
-        
-        data_guru['role'] = 'guru'
-        users_ref.add(data_guru)
+        account_data = dict(data_guru)
+        account_data["password"] = _hash_password(account_data["password"])
+        account_data["role"] = "guru"
+        users_ref.add(account_data)
         return True, "Pendaftaran Berhasil"
     except Exception as e:
         return False, f"Gagal mendaftar: {e}"
 
 def update_profil_guru(doc_id, data_baru):
-    """ 
-    Update data user secara permanen (Nama, NIP, Mapel, dan Foto Path).
-    Fungsi ini menerima dictionary 'data_baru' yang dinamis.
-    """
-    if db is None: return False, "Database belum terhubung."
+    """Update profile fields; password must be changed through update_password()."""
+    if db is None:
+        return False, "Database belum terhubung."
     try:
-        # .update() hanya mengubah field yang dikirim, tidak menghapus field lain
-        db.collection('users').document(doc_id).update(data_baru)
+        safe_data = dict(data_baru)
+        safe_data.pop("password", None)
+        db.collection("users").document(doc_id).update(safe_data)
         return True, "Profil diperbarui di Cloud!"
     except Exception as e:
         return False, f"Gagal update: {str(e)}"
 
 def update_password(doc_id, password_baru):
-    if db is None: return False
+    if db is None:
+        return False
     try:
-        db.collection('users').document(doc_id).update({"password": password_baru})
+        db.collection("users").document(doc_id).update({
+            "password": _hash_password(password_baru)
+        })
         return True
-    except:
+    except Exception:
         return False
 
 # ==============================================================================
