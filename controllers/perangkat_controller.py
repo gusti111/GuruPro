@@ -3,13 +3,11 @@ from PyQt6.QtWidgets import (QWidget, QLabel, QPushButton, QFrame, QVBoxLayout,
                              QMessageBox, QInputDialog, QSpacerItem, QSizePolicy)
 from PyQt6.QtGui import QPixmap, QImage, QIcon, QFont, QCursor
 from PyQt6.QtCore import Qt, QTimer, QObject, pyqtSignal
-from google.cloud.firestore_v1.base_query import FieldFilter 
 import qrcode
 import io
 import uuid
 from datetime import datetime, timezone, timedelta
 from backend import database
-from firebase_admin import firestore 
 
 # --- CLASS SINYAL (JEMBATAN THREADING - WAJIB ADA) ---
 class DeviceSignals(QObject):
@@ -116,40 +114,21 @@ class PerangkatController:
         nip = user.get('nip')
         if not nip: return
 
-        # PERBAIKAN: HAPUS FILTER 'connected' agar bisa baca status 'disconnected'
-        doc_ref = database.db.collection("remote_sessions").where(filter=FieldFilter("nip", "==", nip))
-        
-        def on_snapshot(docs, changes, read_time):
-            data_list = []
-            for doc in docs:
-                d = doc.to_dict()
-                d['id'] = doc.id
-                # Filter manual: Tampilkan semua KECUALI yang masih 'waiting' (QR belum discan)
-                if d.get('status') != 'waiting':
-                    data_list.append(d)
-            
+        try:
+            data_list = [
+                item for item in database.ambil_sesi_remote()
+                if item.get("status") != "waiting"
+            ]
             self.signals.update_data.emit(data_list)
 
-            # Cek Command
-            for change in changes:
-                if change.type.name == 'MODIFIED':
-                    doc_data = change.document.to_dict()
-                    last_cmd = doc_data.get('last_command')
-                    cmd = doc_data.get('command')
-                    
-                    if last_cmd == "refresh_ui":
-                        database.db.collection("remote_sessions").document(change.document.id).update({"last_command": "none"})
-                        self.signals.request_refresh.emit()
-
-                    if cmd == "buka_dashboard":
-                        database.db.collection("remote_sessions").document(change.document.id).update({"command": "none"})
-                        self.signals.request_nav.emit(0)
-                    elif cmd == "buka_kelas":
-                        database.db.collection("remote_sessions").document(change.document.id).update({"command": "none"})
-                        self.signals.request_nav.emit(1)
-
-        if self.listener_devices: pass 
-        self.listener_devices = doc_ref.on_snapshot(on_snapshot)
+            # Poll command over the authenticated API; never open a client Firestore listener.
+            for command in database.poll_perintah_remote():
+                if command.get("type") == "refresh":
+                    self.signals.request_refresh.emit()
+                elif command.get("type") == "navigate":
+                    self.signals.request_nav.emit(int(command.get("page", 0)))
+        except Exception as exc:
+            print(f"Gagal memuat perangkat: {exc}")
 
     def handle_database_update(self, data_list):
         self.local_device_data = data_list
@@ -157,8 +136,7 @@ class PerangkatController:
 
     def refresh_tampilan_internal(self):
         """Update tampilan waktu/status tanpa request DB baru"""
-        if self.local_device_data:
-            self.render_grid_devices()
+        self.muat_daftar_perangkat()
 
     def render_grid_devices(self):
         # Bersihkan Grid
@@ -312,7 +290,7 @@ class PerangkatController:
              btn_aksi.setCursor(Qt.CursorShape.PointingHandCursor)
              btn_aksi.setStyleSheet("QPushButton { background:#FEF2F2; color:#EF4444; border:1px solid #FECDD3; border-radius:6px; padding:6px; font-weight:700; font-size:11px; } QPushButton:hover { background:#FFE4E6; }")
              # Hapus dokumen dari Firestore
-             btn_aksi.clicked.connect(lambda: database.db.collection("remote_sessions").document(data['id']).delete())
+             btn_aksi.clicked.connect(lambda: self.hapus_riwayat(data['id']))
         else:
              btn_aksi = QPushButton("Putuskan")
              btn_aksi.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -365,21 +343,9 @@ class PerangkatController:
 
     def generate_qr_session(self):
         try:
-            self.current_qr_session = str(uuid.uuid4())[:8]
-            user = getattr(self.main, 'user', {})
-            data = {
-                "status": "waiting",
-                "created_at": firestore.SERVER_TIMESTAMP,
-                "last_update": firestore.SERVER_TIMESTAMP,
-                "nama_guru": user.get('nama_lengkap', 'Guru'),
-                "nip": user.get('nip', '-'),
-                "jabatan": user.get('jabatan', 'Guru'),
-                "mapel": user.get('mapel', '-'),
-                "connected_device": "-",
-                "custom_name": "" 
-            }
-            database.db.collection("remote_sessions").document(self.current_qr_session).set(data)
-            link = f"https://gurupro-app-bc6cc.web.app/?sid={self.current_qr_session}"
+            pairing = database.buat_sesi_remote()
+            self.current_qr_session = pairing["sessionId"]
+            link = pairing["pairUrl"]
             qr = qrcode.QRCode(box_size=10, border=1)
             qr.add_data(link)
             qr.make(fit=True)
@@ -393,12 +359,10 @@ class PerangkatController:
 
     def cek_status_connect_dialog(self):
         if not self.current_qr_session: return
-        doc = database.db.collection("remote_sessions").document(self.current_qr_session).get()
-        if doc.exists:
-            data = doc.to_dict()
-            if data.get('status') == 'connected':
-                self.timer_cek.stop()
-                self.signals.device_connected.emit(data.get('connected_device'))
+        data = database.ambil_sesi_remote_id(self.current_qr_session)
+        if data and data.get('status') == 'connected':
+            self.timer_cek.stop()
+            self.signals.device_connected.emit(data.get('connected_device'))
 
     def on_device_connected(self, device_name):
         if self.dialog_qr: self.dialog_qr.accept()
@@ -407,11 +371,20 @@ class PerangkatController:
     def aksi_ubah_nama(self, doc_id, nama_lama):
         nama_baru, ok = QInputDialog.getText(self.main, "Ubah Nama Perangkat", "Berikan nama identitas:", text=nama_lama)
         if ok and nama_baru:
-            database.db.collection("remote_sessions").document(doc_id).update({"custom_name": nama_baru})
+            database.update_sesi_remote(doc_id, custom_name=nama_baru)
+            self.muat_daftar_perangkat()
 
     def aksi_putuskan(self, doc_id):
         if QMessageBox.question(self.main, "Konfirmasi", "Putuskan koneksi perangkat ini?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
-            database.db.collection("remote_sessions").document(doc_id).update({"status": "disconnected_by_host"})
+            database.update_sesi_remote(doc_id, status="disconnected_by_host")
+            self.muat_daftar_perangkat()
+
+    def hapus_riwayat(self, session_id):
+        try:
+            database.hapus_sesi_remote(session_id)
+            self.muat_daftar_perangkat()
+        except Exception as exc:
+            QMessageBox.warning(self.main, "Gagal", f"Tidak dapat menghapus riwayat: {exc}")
 
     def handle_refresh(self):
         if hasattr(self.main, 'laporan_ctrl'):
