@@ -26,3 +26,7 @@ jobs:
           node-version: 20
       - run: npm install
       - run: npm test
+      - name: Check browser client syntax
+        run: node --check ../remote-app.js
+      - name: Check alternate browser client syntax
+        run: node --check ../../remote_web/remote-app.js
