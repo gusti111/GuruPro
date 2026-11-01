@@ -258,6 +258,7 @@ class DashboardWindow(QMainWindow):
 
     def logout(self):
         if QMessageBox.question(self, "Keluar", "Yakin ingin keluar?") == QMessageBox.StandardButton.Yes:
+            database.logout()
             self.login = LoginWindow()
             self.login.show()
             self.close()
