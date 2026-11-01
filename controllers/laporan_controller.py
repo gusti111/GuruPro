@@ -133,11 +133,15 @@ class LaporanController:
                 # Filter Bulan
                 if filter_bulan != "Semua Bulan" and tanggal_ts:
                     try:
-                        if hasattr(tanggal_ts, 'month'): 
-                            bulan_data = tanggal_ts.month
-                        else: 
-                            dt = datetime.fromtimestamp(tanggal_ts.timestamp())
+                        if isinstance(tanggal_ts, str):
+                            dt = datetime.fromisoformat(tanggal_ts.replace("Z", "+00:00"))
                             bulan_data = dt.month
+                        elif hasattr(tanggal_ts, 'month'):
+                            bulan_data = tanggal_ts.month
+                        elif hasattr(tanggal_ts, 'timestamp'):
+                            bulan_data = datetime.fromtimestamp(tanggal_ts.timestamp()).month
+                        else:
+                            continue
                         
                         if bulan_data != map_bulan_angka[filter_bulan]:
                             continue 
