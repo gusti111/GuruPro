@@ -315,7 +315,7 @@ class PengaturanController:
         
         if tanya == QMessageBox.StandardButton.Yes:
             self.main.inputEditNama.clear()
-            self.main.inputEditNIP.clear()
+            self.main.inputEditNIP.setText(str(self.main.user.get('nip', '')))
             self.main.inputEditMapel.clear()
             # Reset Combo Jabatan
             if self.comboJabatan: self.comboJabatan.setCurrentIndex(0)
