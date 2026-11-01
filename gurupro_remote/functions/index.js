@@ -220,7 +220,7 @@ async function saveAttendance(payload, claims) {
       nis,
       nama: rosterByNis.get(nis),
       status: ["Hadir", "Sakit", "Izin", "Alpa"].includes(student.status) ? student.status : "Alpa",
-      nilai: Math.max(0, Math.min(100, Number(student.nilai) || 0)),
+      nilai: student.status === "Hadir" ? Math.max(0, Math.min(100, Number(student.nilai) || 0)) : 0,
     };
   });
   const query = await db.collection("absensi").where("id_kelas", "==", classId).where("pertemuan", "==", meeting).limit(1).get();
@@ -387,8 +387,12 @@ async function handleAction(action, body, claims, req) {
       for (const key of allowed) {
         if (Object.prototype.hasOwnProperty.call(body.data || {}, key)) {
           const value = body.data[key];
-          if (key === "foto_base64" && (typeof value !== "string" || value.length > 1500000)) fail(400, "Foto tidak valid atau terlalu besar.", "invalid_photo");
-          update[key] = typeof value === "string" ? value.slice(0, key === "foto_base64" ? 1500000 : 200) : value;
+          if (key === "foto_base64" && (typeof value !== "string" ||
+              value.length > 700000 ||
+              !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(value))) {
+            fail(400, "Foto harus berupa JPEG, PNG, atau WebP dengan ukuran yang diizinkan.", "invalid_photo");
+          }
+          update[key] = typeof value === "string" ? value.slice(0, key === "foto_base64" ? 700000 : 200) : value;
         }
       }
       if (!Object.keys(update).length) fail(400, "Tidak ada perubahan profil.", "empty_update");
