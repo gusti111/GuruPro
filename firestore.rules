@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // FAIL-CLOSED baseline.
+    // The current GuruPro desktop client uses Firebase Admin SDK credentials,
+    // which bypass Firestore Security Rules. The remote web client also accesses
+    // Firestore directly without Firebase Authentication.
+    //
+    // Do NOT replace this with permissive rules or deploy until:
+    // 1. Admin credentials have been removed from distributable clients.
+    // 2. Every client signs in with Firebase Authentication.
+    // 3. Document ownership and remote-session authorization are modeled.
+    // 4. Emulator tests cover all allowed and denied operations.
+    //
+    // Deny all client SDK access by default. Admin SDK service accounts bypass
+    // these rules and must be secured server-side separately.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
