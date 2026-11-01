@@ -8,6 +8,7 @@ import io
 import uuid
 from datetime import datetime, timezone, timedelta
 from backend import database
+from backend.time_utils import parse_utc_datetime
 
 # --- CLASS SINYAL (JEMBATAN THREADING - WAJIB ADA) ---
 class DeviceSignals(QObject):
@@ -197,23 +198,7 @@ class PerangkatController:
     # --- LOGIKA STATUS & WAKTU CERDAS ---
     @staticmethod
     def parse_timestamp(value):
-        """Parse ISO-8601 timestamps returned by the Firebase API as aware UTC."""
-        if value is None or value == "":
-            return None
-        try:
-            if isinstance(value, datetime):
-                parsed = value
-            elif isinstance(value, str):
-                parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
-            elif callable(getattr(value, "to_datetime", None)):
-                parsed = value.to_datetime()
-            else:
-                return None
-            if parsed.tzinfo is None:
-                parsed = parsed.replace(tzinfo=timezone.utc)
-            return parsed.astimezone(timezone.utc)
-        except (TypeError, ValueError, OverflowError):
-            return None
+        return parse_utc_datetime(value)
 
     def hitung_status_detail(self, status_db, last_update_ts):
         """Menentukan status Online/Idle/Disconnected"""
