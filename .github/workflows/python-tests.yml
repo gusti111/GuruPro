@@ -5,6 +5,9 @@ on:
     paths:
       - "backend/**"
       - "tests/**"
+      - "main.py"
+      - "controllers/**"
+      - "ui/**"
       - ".github/workflows/python-tests.yml"
   pull_request:
     paths:
