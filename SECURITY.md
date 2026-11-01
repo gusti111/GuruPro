@@ -90,4 +90,4 @@ This branch does not claim the live Firebase project has been migrated. Before t
 - All existing clients have been upgraded before deploying deny-all rules.
 - Backup restore and production IAM/audit log review.
 
-No production deployment, live database migration, real account test, or emulator run is asserted by this source change. CI runs the repository's static/unit and Firestore Rules emulator checks.
+No production deployment, live database migration, real-account test, or full end-to-end Functions/Auth/Firestore emulator session was performed. The GitHub Actions Firestore Rules Emulator suite did pass on the latest rules-workflow revision; Python security/compile tests and Functions + both PWA syntax tests also passed on their latest relevant revisions. These checks validate source boundaries and rules behaviour, not the live Firebase project's configuration or deployed runtime.
