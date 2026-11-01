@@ -44,7 +44,7 @@ cd ..
 firebase emulators:start --only auth,firestore,functions,hosting
 ```
 
-The Functions runtime requires Node.js 20. The Firestore Rules test command is:
+The Functions runtime uses Node.js 22. The Firestore Rules test command is:
 
 ```bash
 npm run test:rules
