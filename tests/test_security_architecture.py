@@ -88,8 +88,10 @@ class SecurityArchitectureTests(unittest.TestCase):
 
     def test_remote_controller_parses_api_timestamp_strings(self):
         source = self.read("controllers/perangkat_controller.py")
-        self.assertIn("datetime.fromisoformat(value.strip().replace(\"Z\", \"+00:00\"))", source)
+        helper = self.read("backend/time_utils.py")
+        self.assertIn("parse_utc_datetime(value)", source)
         self.assertIn("self.parse_timestamp(last_update_ts)", source)
+        self.assertIn("datetime.fromisoformat(value.strip().replace(\"Z\", \"+00:00\"))", helper)
 
     def test_profile_does_not_allow_nip_to_appear_editable(self):
         source = self.read("controllers/pengaturan_controller.py")
