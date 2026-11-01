@@ -335,16 +335,23 @@ class PerangkatController:
         layout.addWidget(self.lbl_qr_image, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(lbl_info)
         
+        self.current_qr_session = None
+        self.qr_expires_at = None
         self.generate_qr_session()
+        if not self.current_qr_session:
+            QMessageBox.warning(self.main, "QR Tidak Tersedia", "Kode pairing tidak berhasil dibuat. Periksa koneksi dan coba lagi.")
+            self.dialog_qr.reject()
+            return
         self.timer_cek = QTimer(self.dialog_qr)
         self.timer_cek.timeout.connect(self.cek_status_connect_dialog)
-        self.timer_cek.start(3000) 
+        self.timer_cek.start(3000)
         self.dialog_qr.exec()
 
     def generate_qr_session(self):
         try:
             pairing = database.buat_sesi_remote()
             self.current_qr_session = pairing["sessionId"]
+            self.qr_expires_at = datetime.now(timezone.utc) + timedelta(seconds=int(pairing.get("expiresIn", 180)))
             link = pairing["pairUrl"]
             qr = qrcode.QRCode(box_size=10, border=1)
             qr.add_data(link)
@@ -358,11 +365,26 @@ class PerangkatController:
             print(f"Gagal generate QR: {e}")
 
     def cek_status_connect_dialog(self):
-        if not self.current_qr_session: return
-        data = database.ambil_sesi_remote_id(self.current_qr_session)
-        if data and data.get('status') == 'connected':
+        if not self.current_qr_session:
+            return
+        try:
+            data = database.ambil_sesi_remote_id(self.current_qr_session)
+            if data and data.get("status") == "connected":
+                self.timer_cek.stop()
+                self.signals.device_connected.emit(data.get("connected_device"))
+                return
+            if self.qr_expires_at and datetime.now(timezone.utc) >= self.qr_expires_at:
+                self.timer_cek.stop()
+                QMessageBox.warning(
+                    self.dialog_qr,
+                    "QR Kedaluwarsa",
+                    "Kode pairing berlaku selama 3 menit. Tutup dialog dan buat QR baru."
+                )
+                self.dialog_qr.reject()
+        except Exception as exc:
             self.timer_cek.stop()
-            self.signals.device_connected.emit(data.get('connected_device'))
+            QMessageBox.warning(self.dialog_qr, "Koneksi Gagal", f"Tidak dapat memeriksa status perangkat: {exc}")
+            self.dialog_qr.reject()
 
     def on_device_connected(self, device_name):
         if self.dialog_qr: self.dialog_qr.accept()
