@@ -471,15 +471,25 @@ async function handleAction(action, body, claims, req) {
       const allowed = ["nama_lengkap", "mapel", "jabatan", "foto_base64"];
       const update = {};
       for (const key of allowed) {
-        if (Object.prototype.hasOwnProperty.call(body.data || {}, key)) {
-          const value = body.data[key];
-          if (key === "foto_base64" && (typeof value !== "string" ||
-              value.length > 700000 ||
-              !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(value))) {
+        if (!Object.prototype.hasOwnProperty.call(body.data || {}, key)) continue;
+        const value = body.data[key];
+        if (typeof value !== "string") {
+          fail(400, "Field profil harus berupa teks yang valid.", "invalid_profile_field");
+        }
+        if (key === "foto_base64") {
+          if (value.length > 700000 ||
+              !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(value)) {
             fail(400, "Foto harus berupa JPEG, PNG, atau WebP dengan ukuran yang diizinkan.", "invalid_photo");
           }
-          update[key] = typeof value === "string" ? value.slice(0, key === "foto_base64" ? 700000 : 200) : value;
+          update[key] = value;
+          continue;
         }
+        const limits = { nama_lengkap: 150, mapel: 100, jabatan: 100 };
+        const normalized = cleanString(value, limits[key]);
+        if (key === "nama_lengkap" && !normalized) {
+          fail(400, "Nama lengkap tidak boleh kosong.", "invalid_profile_field");
+        }
+        update[key] = normalized;
       }
       if (!Object.keys(update).length) fail(400, "Tidak ada perubahan profil.", "empty_update");
       const user = await getUser(claims.uid, claims);
