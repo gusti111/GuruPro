@@ -1,17 +1,21 @@
+# Python build artifacts
 build/
 dist/
 *.spec
 __pycache__/
-*.pyc
+*.py[cod]
 venv/
 .venv/
 
-# Secrets & Local Configurations
-json/
-*.json
-*.txt
+# Local secrets and environment
+.env
+.env.*
+!.env.example
+json/toko_kunci.json
+**/serviceAccount*.json
+**/*service-account*.json
+*.pem
+*.key
 
-# Output files & Byte-code
+# Local exports and generated data
 *.xlsx
-*.pyc
-__pycache__/
