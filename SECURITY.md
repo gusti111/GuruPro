@@ -15,7 +15,12 @@ The security branch introduces an API-first architecture:
 - A scheduled cleanup removes expired pairings and disconnected/expired device sessions, and revokes/deletes their Firebase Auth identities.
 - Passwords use salted PBKDF2-HMAC-SHA256. Legacy plaintext hashes are upgraded only after a successful login; login errors do not disclose whether a NIP exists.
 - Firestore Rules deny all direct client SDK access. Functions Admin SDK access is server-side and bypasses these rules by design.
-- Firestore timestamp values are serialized as ISO-8601 strings for clients.
+- Firestore timestamp values are serialized as ISO-8601 strings for clients; desktop device management normalizes them to aware UTC values before calculating activity or displaying Pontianak/WIB time.
+- Desktop logout revokes the Firebase refresh-token family; local credentials are always cleared even when the API is unreachable, and the desktop UI reports when server-side revocation could not be confirmed.
+- Password changes disconnect and revoke the account's paired device identities. Scheduled cleanup retries Auth identity deletion when Firebase Auth is temporarily unavailable.
+- Profile fields are type- and length-validated server-side. NIP remains read-only in settings because it is the login and authorization identity.
+- Attendance writes reject unknown/duplicate/incomplete rosters, invalid statuses, and missing/non-integer/out-of-range scores. Student imports normalize common gender labels and reject duplicate NIS values.
+- `gurupro_remote/firestore.indexes.json` defines the composite index required for attendance lookup by class and meeting.
 
 ## Files changed
 
@@ -93,8 +98,10 @@ This branch does not claim the live Firebase project has been migrated. Before t
 - Successful deployment of the Functions API and Hosting rewrites.
 - Firebase Auth sign-in, token refresh, password change, legacy-account migration, and revocation.
 - Owner/non-owner class access, student import, attendance save/read/delete, and cross-account denial.
+- Desktop explicit logout and normal window-close revocation, paired-device cleanup after password changes, and cleanup retry behaviour.
+- API profile field constraints, immutable NIP behaviour, timestamp normalization, import validation, and attendance score validation.
 - One-time QR pairing, expired/reused pairing denial, device logout/revocation, and 12-hour expiry.
 - All existing clients have been upgraded before deploying deny-all rules.
 - Backup restore and production IAM/audit log review.
 
-No production deployment, live database migration, real-account test, or full end-to-end Functions/Auth/Firestore emulator session was performed. The Firestore Rules Emulator suite passed on revision `146c586`; the Rules file has not changed since that passing run. A rerun on the current branch revision may still be executing. Python security/compile tests and Functions + both PWA syntax tests passed on the current source revision. These checks validate source boundaries and Rules behaviour, not the live Firebase project's configuration or deployed runtime.
+No production deployment, live database migration, real-account test, or full end-to-end Functions/Auth/Firestore emulator session was performed. Python security/compile tests, Functions/password tests, both PWA syntax checks, and the Firestore Rules Emulator suite have passed on the latest relevant source revisions. The emulator tests validate source-level Rules behaviour; they do not prove that the live Firebase project's secrets, APIs, billing, IAM, or deployed runtime are configured correctly.
