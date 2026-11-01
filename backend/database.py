@@ -1,291 +1,182 @@
-import firebase_admin
-from firebase_admin import credentials, firestore
-from google.cloud.firestore_v1.base_query import FieldFilter 
-import os
-import sys
+"""GuruPro data-access layer.
 
-# ==============================================================================
-# FUNGSI PENCARI JALUR (RESOURCE PATH)
-# ==============================================================================
-def resource_path(relative_path):
-    """ Dapatkan path absolut ke resource, wajib agar file JSON terbaca di EXE """
-    try:
-        # Jika dijalankan sebagai EXE (PyInstaller)
-        base_path = sys._MEIPASS
-    except Exception:
-        # Jika dijalankan sebagai script Python biasa
-        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            
-    return os.path.join(base_path, relative_path)
+All protected Firestore operations are executed by the Firebase Functions API.
+The desktop application never initializes Firebase Admin SDK and never loads a
+service-account JSON file.
+"""
+from __future__ import annotations
 
-# ==============================================================================
-# KONFIGURASI DATABASE
-# ==============================================================================
-# Pastikan path ini sesuai dengan struktur foldermu: ProjectFolder/json/toko_kunci.json
-KEY_PATH = resource_path(os.path.join("json", "toko_kunci.json")) 
+from typing import Any
+
+from backend import firebase_api
+from backend.firebase_api import ApiError
+
+
+# Kept as None during the migration to make accidental direct Firestore access
+# fail visibly instead of silently reverting to a bundled Admin credential.
 db = None
+firestore = None
 
-def init_db():
-    global db
-    if not os.path.exists(KEY_PATH):
-        print(f"❌ ERROR DATABASE: File kunci tidak ditemukan di '{KEY_PATH}'")
-        return None
+
+def cek_login(nip: str, password: str):
     try:
-        if not firebase_admin._apps:
-            cred = credentials.Certificate(KEY_PATH)
-            firebase_admin.initialize_app(cred)
-            print("✅ SYSTEM: Koneksi ke Google Firebase BERHASIL!")
-        
-        db = firestore.client()
-        return db
-    except Exception as e:
-        print(f"❌ ERROR KONEKSI: {e}")
-        return None
+        user = firebase_api.login(nip.strip(), password)
+        return True, user
+    except ApiError as exc:
+        return False, str(exc)
 
-# Jalankan inisialisasi otomatis saat file diimport
-if db is None:
-    init_db()
 
-# ==============================================================================
-# 1. FITUR AKUN (LOGIN, DAFTAR & PROFIL)
-# ==============================================================================
-try:
-    from .password_utils import hash_password as _hash_password, verify_password as _verify_password
-except ImportError:
-    from password_utils import hash_password as _hash_password, verify_password as _verify_password
-
-def cek_login(nip, password):
-    """Validate credentials and migrate legacy plaintext after successful login."""
-    if db is None:
-        return False, "Database belum terhubung."
+def daftar_guru_baru(data_guru: dict[str, Any]):
     try:
-        docs = db.collection("users").where(
-            filter=FieldFilter("nip", "==", nip)
-        ).limit(1).stream()
-        for doc in docs:
-            user_data = doc.to_dict() or {}
-            valid, is_legacy = _verify_password(password, user_data.get("password", ""))
-            if not valid:
-                return False, "NIP atau Kata Sandi salah!"
-            if is_legacy:
-                doc.reference.update({"password": _hash_password(password)})
-                user_data["password"] = None
-            user_data["doc_id"] = doc.id
-            return True, user_data
-        return False, "NIP atau Kata Sandi salah!"
-    except Exception as e:
-        return False, f"Error System: {e}"
+        result = firebase_api.register(data_guru)
+        return bool(result.get("success")), result.get("message", "Pendaftaran selesai.")
+    except ApiError as exc:
+        return False, str(exc)
 
-def daftar_guru_baru(data_guru):
-    """Register an account with a salted password hash, not plaintext."""
-    if db is None:
-        return False, "Database belum terhubung."
-    try:
-        users_ref = db.collection("users")
-        cek_nip = users_ref.where(
-            filter=FieldFilter("nip", "==", data_guru["nip"])
-        ).limit(1).get()
-        if len(list(cek_nip)) > 0:
-            return False, "NIP ini sudah terdaftar!"
-        account_data = dict(data_guru)
-        account_data["password"] = _hash_password(account_data["password"])
-        account_data["role"] = "guru"
-        users_ref.add(account_data)
-        return True, "Pendaftaran Berhasil"
-    except Exception as e:
-        return False, f"Gagal mendaftar: {e}"
 
-def update_profil_guru(doc_id, data_baru):
-    """Update profile fields; password must be changed through update_password()."""
-    if db is None:
-        return False, "Database belum terhubung."
-    try:
-        safe_data = dict(data_baru)
-        safe_data.pop("password", None)
-        db.collection("users").document(doc_id).update(safe_data)
-        return True, "Profil diperbarui di Cloud!"
-    except Exception as e:
-        return False, f"Gagal update: {str(e)}"
+def logout():
+    firebase_api.logout()
 
-def update_password(doc_id, password_baru):
-    if db is None:
-        return False
-    try:
-        db.collection("users").document(doc_id).update({
-            "password": _hash_password(password_baru)
-        })
-        return True
-    except Exception:
-        return False
 
-# ==============================================================================
-# 2. FITUR KELAS & SISWA
-# ==============================================================================
-def tambah_kelas(data_kelas):
-    if db is None: return False, "Database belum terhubung."
+def update_profil_guru(doc_id: str, data_baru: dict[str, Any]):
     try:
-        db.collection('kelas').add(data_kelas)
-        return True, f"Kelas {data_kelas['nama_kelas']} berhasil dibuat!"
-    except Exception as e:
-        return False, f"Gagal: {str(e)}"
+        result = firebase_api.update_profile(data_baru)
+        profile = result.get("profile") if isinstance(result, dict) else None
+        return True, profile or "Profil diperbarui."
+    except ApiError as exc:
+        return False, str(exc)
 
-def ambil_daftar_kelas(nip_guru):
-    if db is None: return []
+
+def update_password(doc_id: str, password_baru: str, password_lama: str | None = None):
+    if not password_lama:
+        return False, "Password saat ini wajib dimasukkan."
     try:
-        docs = db.collection('kelas').where(filter=FieldFilter("nip_guru", "==", nip_guru)).stream()
-        hasil = []
-        for doc in docs:
-            data = doc.to_dict()
-            data['id'] = doc.id
-            hasil.append(data)
-        return hasil
-    except:
+        firebase_api.change_password(password_lama, password_baru)
+        firebase_api.clear_session()
+        return True, "Password berhasil diubah. Silakan login kembali."
+    except ApiError as exc:
+        return False, str(exc)
+
+
+def tambah_kelas(data_kelas: dict[str, Any]):
+    try:
+        result = firebase_api.api_call("class.create", data=data_kelas)
+        return bool(result.get("success")), result.get("message", "Kelas berhasil dibuat.")
+    except ApiError as exc:
+        return False, str(exc)
+
+
+def ambil_daftar_kelas(nip_guru: str | None = None):
+    try:
+        result = firebase_api.api_call("class.list")
+        return result if isinstance(result, list) else []
+    except ApiError:
         return []
 
-def hapus_kelas(doc_id):
-    if db is None: return False
+
+def hapus_kelas(doc_id: str):
     try:
-        db.collection('kelas').document(doc_id).delete()
-        return True
-    except:
+        result = firebase_api.api_call("class.delete", classId=doc_id)
+        return bool(result.get("success"))
+    except ApiError:
         return False
 
-def simpan_daftar_siswa_massal(id_kelas, list_siswa):
-    """ Menyimpan siswa dari Excel ke sub-koleksi kelas """
-    if db is None: return False
-    try:
-        batch = db.batch()
-        count = 0
-        MAX_BATCH_SIZE = 400 # Batas aman Firestore batch
 
-        for siswa in list_siswa:
-            # Gunakan NIS sebagai ID Dokumen agar tidak duplikat
-            siswa_ref = db.collection('kelas').document(id_kelas).collection('siswa').document(str(siswa['nis']))
-            batch.set(siswa_ref, {
-                "nis": str(siswa['nis']),
-                "nama": siswa['nama'],
-                "gender": siswa['gender']
-            })
-            count += 1
-            
-            # Jika batch penuh, commit dan buat batch baru
-            if count >= MAX_BATCH_SIZE:
-                batch.commit()
-                batch = db.batch()
-                count = 0
-                
-        if count > 0: batch.commit() # Commit sisa data
-        return True
-    except Exception as e:
-        print(f"❌ Error Simpan Siswa: {e}")
+def simpan_daftar_siswa_massal(id_kelas: str, list_siswa: list[dict[str, Any]]):
+    try:
+        result = firebase_api.api_call(
+            "students.import", classId=id_kelas, students=list_siswa
+        )
+        return bool(result.get("success"))
+    except ApiError:
         return False
 
-def ambil_jumlah_siswa(id_kelas):
-    """ Menghitung jumlah siswa di sub-koleksi 'siswa' """
-    if db is None: return 0
+
+def ambil_jumlah_siswa(id_kelas: str):
     try:
-        # Menggunakan aggregation query agar lebih hemat read quota (jika support)
-        # Tapi untuk aman, pakai count() biasa dulu
-        docs = db.collection('kelas').document(id_kelas).collection('siswa').count().get()
-        return docs[0][0].value
-    except:
+        result = firebase_api.api_call("students.count", classId=id_kelas)
+        return int(result.get("count", 0))
+    except (ApiError, TypeError, ValueError):
         return 0
 
-def ambil_siswa_per_kelas(id_kelas):
-    """ Mengambil semua siswa dari sub-koleksi 'siswa' berdasarkan ID kelas """
-    if db is None: return []
+
+def ambil_siswa_per_kelas(id_kelas: str):
     try:
-        # Mengakses sub-koleksi: kelas -> {id_kelas} -> siswa
-        docs = db.collection('kelas').document(id_kelas).collection('siswa').order_by("nama").get()
-        hasil = []
-        for doc in docs:
-            data = doc.to_dict()
-            hasil.append(data)
-        return hasil
-    except Exception as e:
-        print(f"❌ Error ambil siswa: {e}")
+        result = firebase_api.api_call("students.list", classId=id_kelas)
+        return result if isinstance(result, list) else []
+    except ApiError:
         return []
 
-# ==============================================================================
-# 3. FITUR ABSENSI & LAPORAN
-# ==============================================================================
-def simpan_absensi_ke_db(data_absensi):
-    if db is None: return False, "Database putus."
-    try:
-        # Cek Duplikat (Agar tidak double input)
-        cek = db.collection('absensi')\
-                .where(filter=FieldFilter("id_kelas", "==", data_absensi['id_kelas']))\
-                .where(filter=FieldFilter("pertemuan", "==", data_absensi['pertemuan']))\
-                .limit(1).get()
-                
-        if len(list(cek)) > 0:
-            # Jika sudah ada, UPDATE data lama
-            doc_id = list(cek)[0].id
-            db.collection('absensi').document(doc_id).set(data_absensi)
-            return True, "Data absensi diperbarui!"
-        else:
-            # Jika belum ada, BUAT BARU
-            db.collection('absensi').add(data_absensi)
-            return True, "Data absensi berhasil disimpan!"
-            
-    except Exception as e:
-        return False, str(e)
 
-def ambil_rekap_absensi(id_kelas):
-    if db is None: return []
+def simpan_absensi_ke_db(data_absensi: dict[str, Any]):
     try:
-        docs = db.collection('absensi').where(filter=FieldFilter("id_kelas", "==", id_kelas)).stream()
-        # Urutkan berdasarkan pertemuan
-        data = [doc.to_dict() for doc in docs]
-        # Sort sederhana string "Pertemuan Ke-X"
-        data.sort(key=lambda x: x.get('pertemuan', '')) 
-        return data
-    except:
+        result = firebase_api.api_call("attendance.save", data=data_absensi)
+        return True, result.get("message", "Absensi tersimpan.")
+    except ApiError as exc:
+        return False, str(exc)
+
+
+def ambil_absensi_pertemuan(id_kelas: str, pertemuan: str):
+    try:
+        return firebase_api.api_call(
+            "attendance.get", classId=id_kelas, pertemuan=pertemuan
+        )
+    except ApiError:
+        return None
+
+
+def ambil_rekap_absensi(id_kelas: str):
+    try:
+        result = firebase_api.api_call("attendance.list", classId=id_kelas)
+        return result if isinstance(result, list) else []
+    except ApiError:
         return []
 
-# ==============================================================================
-# 4. FITUR REMOTE & PERANGKAT
-# ==============================================================================
 
-def inisialisasi_sesi_remote(token, user_data):
-    """ 
-    FUNGSI UTAMA: Membuat sesi remote dengan data guru LENGKAP.
-    Pastikan 'nama' dan 'nip' terisi agar muncul di HP.
-    """
-    if db is None: return False
+# Remote-device lifecycle. The API creates high-entropy, one-time QR pairing
+# tokens; the short session document ID is not exposed as an authentication key.
+def buat_sesi_remote():
+    return firebase_api.api_call("remote.createPairing")
+
+
+def ambil_sesi_remote():
+    result = firebase_api.api_call("remote.sessions.list")
+    return result if isinstance(result, list) else []
+
+
+def ambil_sesi_remote_id(session_id: str):
+    return firebase_api.api_call("remote.session.get", sessionId=session_id)
+
+
+def update_sesi_remote(session_id: str, **changes: Any):
+    return firebase_api.api_call(
+        "remote.session.update", sessionId=session_id, **changes
+    )
+
+
+def hapus_sesi_remote(session_id: str):
+    result = firebase_api.api_call("remote.session.delete", sessionId=session_id)
+    return bool(result.get("success"))
+
+
+def poll_perintah_remote():
+    result = firebase_api.api_call("remote.pollCommands")
+    return result if isinstance(result, list) else []
+
+
+def inisialisasi_sesi_remote(token: str, user_data: dict[str, Any]):
+    """Deprecated compatibility wrapper; use buat_sesi_remote()."""
+    return buat_sesi_remote()
+
+
+def update_status_remote(session_id: str, status_baru: str):
     try:
-        data_sesi = {
-            "status": "waiting",
-            "created_at": firestore.SERVER_TIMESTAMP,
-            "token": token,
-            # Data Guru dikirim ke Firebase agar HP bisa baca
-            "nama_guru": user_data.get('nama_lengkap', user_data.get('nama', 'Guru')),
-            "jabatan": user_data.get('jabatan', 'Guru Pengajar'),
-            "mapel": user_data.get('mapel', '-'),
-            "nip": user_data.get('nip', '-'),
-            "role": "Admin",
-            "custom_name": "Desktop Admin"
-        }
-        db.collection('remote_sessions').document(token).set(data_sesi)
+        update_sesi_remote(session_id, status=status_baru)
         return True
-    except Exception as e:
-        print(f"Gagal buat sesi: {e}")
+    except ApiError:
         return False
 
-def update_status_remote(session_id, status_baru):
-    """ Memberi tahu desktop bahwa HP sudah terhubung/terputus """
-    if db is None: return False
-    try:
-        db.collection('remote_sessions').document(session_id).update({
-            "status": status_baru,
-            "last_update": firestore.SERVER_TIMESTAMP
-        })
-        return True
-    except:
-        return False
 
-def pantau_sesi_remote(session_id, callback):
-    """ Realtime listener untuk mendeteksi perubahan dari HP """
-    if db is None: return
-    doc_ref = db.collection('remote_sessions').document(session_id)
-    doc_ref.on_snapshot(callback)
+def pantau_sesi_remote(session_id: str, callback):
+    """Deprecated: desktop now polls the authenticated API instead of listening to Firestore."""
+    return None
