@@ -34,13 +34,28 @@ def daftar_guru_baru(data_guru: dict[str, Any]):
         return False, str(exc)
 
 
-def logout():
-    firebase_api.logout()
+def logout() -> tuple[bool, str]:
+    if not firebase_api.has_session():
+        firebase_api.clear_session()
+        return True, "Sesi lokal sudah tidak aktif."
+    try:
+        firebase_api.logout()
+        return True, "Sesi berhasil diakhiri dan token refresh dicabut."
+    except ApiError as exc:
+        firebase_api.clear_session()
+        return False, (
+            "Sesi lokal sudah dihapus, tetapi server belum mengonfirmasi pencabutan token: "
+            f"{exc}"
+        )
 
 
 def update_profil_guru(doc_id: str, data_baru: dict[str, Any]):
+    allowed = {"nama_lengkap", "mapel", "jabatan", "foto_base64"}
+    remote_data = {key: value for key, value in data_baru.items() if key in allowed}
+    if not remote_data:
+        return False, "Tidak ada perubahan profil yang dapat disimpan."
     try:
-        result = firebase_api.update_profile(data_baru)
+        result = firebase_api.update_profile(remote_data)
         profile = result.get("profile") if isinstance(result, dict) else None
         return True, profile or "Profil diperbarui."
     except ApiError as exc:
