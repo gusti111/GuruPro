@@ -22,6 +22,18 @@ const sha256 = (value) => crypto.createHash("sha256").update(String(value)).dige
 const randomToken = (bytes = 32) => crypto.randomBytes(bytes).toString("base64url");
 const cleanString = (value, max = 200) => typeof value === "string" ? value.trim().slice(0, max) : "";
 
+function serializeForClient(value) {
+  if (value instanceof admin.firestore.Timestamp) return value.toDate().toISOString();
+  if (value instanceof Date) return value.toISOString();
+  if (Array.isArray(value)) return value.map(serializeForClient);
+  if (value && typeof value === "object") {
+    const output = {};
+    for (const [key, item] of Object.entries(value)) output[key] = serializeForClient(item);
+    return output;
+  }
+  return value;
+}
+
 function fail(status, message, code = "request_failed") {
   const error = new Error(message);
   error.status = status;
@@ -158,13 +170,17 @@ async function ownedClass(classId, claims) {
   if (!id) fail(400, "ID kelas wajib diisi.", "invalid_class_id");
   const ref = db.collection("kelas").doc(id);
   const snap = await ref.get();
-  if (!snap.exists || snap.data().nip_guru !== claims.nip) fail(404, "Kelas tidak ditemukan.", "class_not_found");
-  return { ref, data: snap.data() };
+  const data = snap.exists ? snap.data() : null;
+  const owned = data && (data.uid ? data.uid === claims.uid : data.nip_guru === claims.nip);
+  if (!owned) fail(404, "Kelas tidak ditemukan.", "class_not_found");
+  return { ref, data };
 }
 
-async function listClasses(nip) {
-  const snap = await db.collection("kelas").where("nip_guru", "==", nip).get();
-  return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+async function listClasses(claims) {
+  const snap = await db.collection("kelas").where("nip_guru", "==", claims.nip).get();
+  return snap.docs
+    .filter((doc) => !doc.data().uid || doc.data().uid === claims.uid)
+    .map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
 async function listStudents(classId, claims) {
@@ -180,12 +196,20 @@ async function saveAttendance(payload, claims) {
   if (!meeting) fail(400, "Pertemuan wajib diisi.", "invalid_meeting");
   const students = Array.isArray(payload.data_siswa) ? payload.data_siswa : [];
   if (students.length > 1000) fail(413, "Jumlah siswa melebihi batas.", "too_many_students");
-  const safeStudents = students.map((student) => ({
-    nis: cleanString(String(student.nis || ""), 40),
-    nama: cleanString(student.nama, 150),
-    status: ["Hadir", "Sakit", "Izin", "Alpa"].includes(student.status) ? student.status : "Alpa",
-    nilai: Math.max(0, Math.min(100, Number(student.nilai) || 0)),
-  }));
+  const roster = await (await db.collection("kelas").doc(classId).collection("siswa").get()).docs;
+  const allowedNis = new Set(roster.map((doc) => String(doc.data().nis || doc.id)));
+  const seenNis = new Set();
+  const safeStudents = students.map((student) => {
+    const nis = cleanString(String(student.nis || ""), 40);
+    if (!nis || !allowedNis.has(nis) || seenNis.has(nis)) fail(400, "Daftar siswa absensi tidak valid.", "invalid_attendance_roster");
+    seenNis.add(nis);
+    return {
+      nis,
+      nama: cleanString(student.nama, 150),
+      status: ["Hadir", "Sakit", "Izin", "Alpa"].includes(student.status) ? student.status : "Alpa",
+      nilai: Math.max(0, Math.min(100, Number(student.nilai) || 0)),
+    };
+  });
   const query = await db.collection("absensi").where("id_kelas", "==", classId).where("pertemuan", "==", meeting).limit(1).get();
   const ref = query.empty ? db.collection("absensi").doc() : query.docs[0].ref;
   await ref.set({
@@ -378,7 +402,7 @@ async function handleAction(action, body, claims, req) {
     }
     case "class.list":
       await requireDesktop(claims);
-      return await listClasses(claims.nip);
+      return await listClasses(claims);
     case "class.delete": {
       await requireDesktop(claims);
       const owned = await ownedClass(body.classId, claims);
@@ -508,7 +532,7 @@ async function handleAction(action, body, claims, req) {
       return { success: true };
     case "remote.classes": {
       await requireRemote(claims);
-      const classes = await listClasses(claims.nip);
+      const classes = await listClasses(claims);
       return await Promise.all(classes.map(async (item) => {
         const count = await db.collection("kelas").doc(item.id).collection("siswa").count().get();
         return { ...item, jumlah_siswa: count.data().count || 0 };
@@ -575,7 +599,7 @@ exports.api = onRequest({
     if (action === "remote.logout") {
       res.set("Set-Cookie", "gp_refresh=; HttpOnly; Secure; SameSite=Strict; Path=/api; Max-Age=0");
     }
-    return res.status(200).json({ data: result });
+    return res.status(200).json({ data: serializeForClient(result) });
   } catch (error) {
     const status = Number(error.status) || 500;
     if (status >= 500) console.error("GuruPro API error:", error);
