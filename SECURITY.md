@@ -55,6 +55,18 @@ From `gurupro_remote/`:
 ```bash
 npm install
 cd functions && npm install && cd ..
+```
+
+For local emulators, create `functions/.secret.local` (already git-ignored) with the same variable names:
+
+```dotenv
+FIREBASE_WEB_API_KEY=your-firebase-web-api-key
+GURUPRO_REGISTRATION_CODE=your-local-enrollment-code-at-least-16-chars
+```
+
+Then start the emulators:
+
+```bash
 firebase emulators:start --only auth,firestore,functions,hosting
 ```
 
