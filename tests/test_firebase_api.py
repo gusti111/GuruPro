@@ -38,6 +38,18 @@ class FirebaseApiClientTests(unittest.TestCase):
         self.assertEqual(firebase_api._id_token, "new-id-token")
         self.assertEqual(firebase_api._refresh_token, "rotated-refresh")
 
+    def test_transient_refresh_error_does_not_clear_session(self):
+        firebase_api.set_tokens("expired-id-token", "refresh-token")
+        with patch.object(firebase_api, "_raw_post", side_effect=[
+            ApiError("expired", status=401),
+            ApiError("temporarily unavailable", status=503),
+        ]):
+            with self.assertRaises(ApiError) as context:
+                firebase_api.api_call("profile.get")
+        self.assertEqual(context.exception.status, 503)
+        self.assertTrue(firebase_api.has_session())
+        self.assertEqual(firebase_api._refresh_token, "refresh-token")
+
     def test_api_call_fails_without_login(self):
         with self.assertRaises(ApiError) as context:
             firebase_api.api_call("profile.get")
