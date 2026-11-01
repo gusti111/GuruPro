@@ -195,6 +195,26 @@ class PerangkatController:
         self.grid_devices.addWidget(container_empty, 0, 0, 1, 2) 
 
     # --- LOGIKA STATUS & WAKTU CERDAS ---
+    @staticmethod
+    def parse_timestamp(value):
+        """Parse ISO-8601 timestamps returned by the Firebase API as aware UTC."""
+        if value is None or value == "":
+            return None
+        try:
+            if isinstance(value, datetime):
+                parsed = value
+            elif isinstance(value, str):
+                parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+            elif callable(getattr(value, "to_datetime", None)):
+                parsed = value.to_datetime()
+            else:
+                return None
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            return parsed.astimezone(timezone.utc)
+        except (TypeError, ValueError, OverflowError):
+            return None
+
     def hitung_status_detail(self, status_db, last_update_ts):
         """Menentukan status Online/Idle/Disconnected"""
         
@@ -211,7 +231,9 @@ class PerangkatController:
         
         # 3. Cek Waktu (Idle vs Online)
         try:
-            last_active = last_update_ts.replace(tzinfo=timezone.utc)
+            last_active = self.parse_timestamp(last_update_ts)
+            if last_active is None:
+                return "⚪ Status Unknown", "#64748B", "border-left: 6px solid #CBD5E1;"
             now = datetime.now(timezone.utc)
             diff = (now - last_active).total_seconds()
             
@@ -225,19 +247,19 @@ class PerangkatController:
             return "⚪ Status Unknown", "#64748B", "border-left: 6px solid #CBD5E1;"
 
     def format_jam(self, timestamp):
-        if not timestamp: return "-"
-        try:
-            # Sederhana: Tambah 7 jam untuk WIB
-            dt = timestamp + timedelta(hours=7) 
-            return dt.strftime("%d %b, %H:%M")
-        except: return "-"
+        dt = self.parse_timestamp(timestamp)
+        if dt is None:
+            return "-"
+        # Firebase timestamps are UTC; display in Pontianak/WIB (UTC+7).
+        local_time = dt.astimezone(timezone(timedelta(hours=7)))
+        return local_time.strftime("%d %b, %H:%M")
 
     def buat_kartu_device(self, data):
         card = QFrame()
         card.setFixedSize(450, 160)
         
         # Ambil Data Status
-        status_db = data.get('status') # connected / disconnected
+        status_db = str(data.get('status') or "waiting") # connected / disconnected
         last_up = data.get('last_update')
         created_at = data.get('created_at')
         
