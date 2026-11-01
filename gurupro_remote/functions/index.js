@@ -205,6 +205,7 @@ async function saveAttendance(payload, claims) {
     const row = doc.data();
     return [String(row.nis || doc.id), cleanString(row.nama, 150)];
   }));
+  if (rosterByNis.size === 0) fail(400, "Kelas belum memiliki siswa.", "empty_class_roster");
   const seenNis = new Set();
   const safeStudents = students.map((student) => {
     const nis = cleanString(String(student.nis || ""), 40);
