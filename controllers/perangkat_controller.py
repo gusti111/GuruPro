@@ -362,6 +362,8 @@ class PerangkatController:
             pixmap = QPixmap.fromImage(QImage.fromData(buffer.getvalue()))
             self.lbl_qr_image.setPixmap(pixmap.scaled(250, 250, Qt.AspectRatioMode.KeepAspectRatio))
         except Exception as e:
+            self.current_qr_session = None
+            self.qr_expires_at = None
             print(f"Gagal generate QR: {e}")
 
     def cek_status_connect_dialog(self):
