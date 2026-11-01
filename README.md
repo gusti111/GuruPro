@@ -79,7 +79,7 @@ The desktop API endpoint defaults to `https://us-central1-gurupro-app-bc6cc.clou
 
 ## Security and project status
 
-See [SECURITY.md](../SECURITY.md) for the threat review, migration design, required Firebase Console configuration, deployment gates, and remaining production validation.
+See [SECURITY.md](SECURITY.md) for the threat review, migration design, required Firebase Console configuration, deployment gates, and remaining production validation.
 
 This repository contains source-level changes and CI checks. It does not assert that the live Firebase project has been deployed, its rules changed, credentials rotated, or real account/data migration completed.
 
