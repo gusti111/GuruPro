@@ -22,7 +22,7 @@ GuruPro is a teacher-oriented application project with a PyQt6 desktop interface
 4. Run the desktop entry point with `python main.py`.
 
 ## Security notes
-This is a development project. Do not use it with real student or teacher data until authentication, authorization, and Firestore security rules have been reviewed and tested. Passwords must not be stored in plaintext. Firebase Admin SDK credentials must remain server-side and must never be bundled into a public client application.
+This is a development project. Do not use it with real student or teacher data until authentication, authorization, and Firestore security rules have been reviewed and tested. New and updated passwords are stored as salted PBKDF2-HMAC-SHA256 hashes. Legacy plaintext passwords are migrated after a successful login. Review any other clients or integrations that read the Firestore password field before deploying this change. Firebase Admin SDK credentials must remain server-side and must never be bundled into a public client application.
 
 ## Author
 Gusty Faqikh
