@@ -128,6 +128,7 @@
     if (!idToken) throw new Error("Sesi tidak ditemukan. Scan QR pairing terbaru.");
     const session = await request("remote.session");
     if (!session || session.status !== "connected") throw new Error("Sesi perangkat sudah berakhir.");
+    if (!profile) profile = await request("remote.profile");
     renderProfile(profile, session);
     await loadClasses();
     if (heartbeatTimer) window.clearInterval(heartbeatTimer);
