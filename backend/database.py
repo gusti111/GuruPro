@@ -49,33 +49,10 @@ if db is None:
 # ==============================================================================
 # 1. FITUR AKUN (LOGIN, DAFTAR & PROFIL)
 # ==============================================================================
-def _hash_password(password):
-    """Hash password with PBKDF2-HMAC-SHA256 and a unique random salt."""
-    import hashlib
-    import secrets
-    iterations = 600_000
-    salt = secrets.token_bytes(16)
-    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
-    return f"pbkdf2_sha256${iterations}${salt.hex()}${digest.hex()}"
-
-def _verify_password(password, stored_value):
-    """Verify modern hashes; support legacy plaintext only for one-time migration."""
-    import hashlib
-    import hmac
-    if not isinstance(stored_value, str):
-        return False, False
-    if not stored_value.startswith("pbkdf2_sha256$"):
-        return hmac.compare_digest(password, stored_value), True
-    try:
-        algorithm, iterations, salt_hex, digest_hex = stored_value.split("$", 3)
-        if algorithm != "pbkdf2_sha256":
-            return False, False
-        candidate = hashlib.pbkdf2_hmac(
-            "sha256", password.encode("utf-8"), bytes.fromhex(salt_hex), int(iterations)
-            ).hex()
-        return hmac.compare_digest(candidate, digest_hex), False
-    except (ValueError, TypeError):
-        return False, False
+try:
+    from .password_utils import hash_password as _hash_password, verify_password as _verify_password
+except ImportError:
+    from password_utils import hash_password as _hash_password, verify_password as _verify_password
 
 def cek_login(nip, password):
     """Validate credentials and migrate legacy plaintext after successful login."""
