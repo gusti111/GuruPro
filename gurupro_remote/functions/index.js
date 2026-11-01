@@ -65,7 +65,7 @@ async function getUser(uid, claims) {
 function authServiceUrl(service, path) {
   const emulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
   const base = emulatorHost
-    ? "http://" + emulatorHost.replace(/^https?:\\/\\//, "") + "/" + service + ".googleapis.com/v1/"
+    ? "http://" + emulatorHost + "/" + service + ".googleapis.com/v1/"
     : "https://" + service + ".googleapis.com/v1/";
   const key = emulatorHost ? "fake-api-key" : API_KEY.value();
   if (!key) fail(503, "Secret FIREBASE_WEB_API_KEY belum dikonfigurasi.", "auth_exchange_unconfigured");
