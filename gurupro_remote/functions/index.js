@@ -505,7 +505,6 @@ async function handleAction(action, body, claims, req) {
     case "remote.logout":
       await requireRemote(claims);
       await db.collection("remote_sessions").doc(claims.sid).update({ status: "disconnected", last_update: now() });
-      await auth.revokeRefreshTokens(claims.uid);
       return { success: true };
     case "remote.classes": {
       await requireRemote(claims);
