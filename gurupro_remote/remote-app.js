@@ -272,12 +272,16 @@
       let invalid = false;
       document.querySelectorAll(".st-item").forEach((row) => {
         const selected = row.querySelector('input[type="radio"]:checked');
-        const score = Number.parseInt(row.querySelector(".js-score").value, 10) || 0;
-        if (!selected || score < 0 || score > 100) invalid = true;
+        const scoreText = row.querySelector(".js-score").value.trim();
+        const score = scoreText === "" ? Number.NaN : Number(scoreText);
+        const needsScore = selected && selected.value === "Hadir";
+        if (!selected || (needsScore && (!Number.isInteger(score) || score < 0 || score > 100))) {
+          invalid = true;
+        }
         dataStudents.push({
           nis: row.dataset.nis, nama: row.dataset.name,
           status: selected ? selected.value : "Alpa",
-          nilai: selected && selected.value === "Hadir" ? score : 0
+          nilai: needsScore && Number.isInteger(score) ? score : 0
         });
       });
       if (invalid) throw new Error("Status dan nilai siswa harus valid (0–100).");
