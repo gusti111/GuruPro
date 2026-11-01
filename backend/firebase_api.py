@@ -152,4 +152,8 @@ def change_password(current_password: str, new_password: str) -> Any:
 
 
 def logout() -> None:
-    clear_session()
+    """Revoke the desktop refresh-token family before clearing local credentials."""
+    try:
+        api_call("auth.logout")
+    finally:
+        clear_session()
