@@ -8,6 +8,7 @@ admin.initializeApp();
 const db = admin.firestore();
 const auth = admin.auth();
 const API_KEY = defineSecret("FIREBASE_WEB_API_KEY");
+const REGISTRATION_CODE = defineSecret("GURUPRO_REGISTRATION_CODE");
 const REGION = "us-central1";
 const HOSTING_ORIGIN = "https://gurupro-app-bc6cc.web.app";
 const ALLOWED_ORIGINS = new Set([
@@ -296,7 +297,15 @@ async function handleAction(action, body, claims, req) {
       const name = cleanString(body.nama_lengkap, 150);
       const nip = cleanString(body.nip, 32);
       const password = typeof body.password === "string" ? body.password : "";
+      const suppliedCode = typeof body.registration_code === "string" ? body.registration_code : "";
+      const configuredCode = REGISTRATION_CODE.value();
       const mapel = cleanString(body.mapel, 100);
+      const suppliedBuffer = Buffer.from(suppliedCode, "utf8");
+      const configuredBuffer = Buffer.from(configuredCode || "", "utf8");
+      const codeValid = configuredBuffer.length >= 16 &&
+        suppliedBuffer.length === configuredBuffer.length &&
+        crypto.timingSafeEqual(suppliedBuffer, configuredBuffer);
+      if (!codeValid) fail(403, "Kode pendaftaran tidak valid.", "invalid_registration_code");
       if (!name || !/^[0-9]{5,32}$/.test(nip) || password.length < 10 || password.length > 128) {
         fail(400, "Nama, NIP 5–32 digit, dan password 10–128 karakter wajib valid.", "invalid_registration");
       }
@@ -581,7 +590,7 @@ async function handleAction(action, body, claims, req) {
 }
 
 exports.api = onRequest({
-  region: REGION, timeoutSeconds: 60, memory: "512MiB", secrets: [API_KEY], cors: false,
+  region: REGION, timeoutSeconds: 60, memory: "512MiB", secrets: [API_KEY, REGISTRATION_CODE], cors: false,
 }, async (req, res) => {
   res.set("Cache-Control", "no-store, max-age=0");
   res.set("Pragma", "no-cache");
