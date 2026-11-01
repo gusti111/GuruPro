@@ -142,7 +142,8 @@ class RegisterWindow(QMainWindow):
             "nama_lengkap": self.inputNamaReg.text(),
             "nip": self.inputNipReg.text(),
             "mapel": self.inputMapelReg.text(),
-            "password": self.inputPassReg.text()
+            "password": self.inputPassReg.text(),
+            "registration_code": self.inputEnrollmentCodeReg.text()
         }
 
         if not data_baru["nama_lengkap"] or not data_baru["nip"]:
@@ -153,6 +154,9 @@ class RegisterWindow(QMainWindow):
             return
         if not (10 <= len(data_baru["password"]) <= 128):
             QMessageBox.warning(self, "Password Tidak Valid", "Password harus terdiri dari 10–128 karakter.")
+            return
+        if not data_baru["registration_code"]:
+            QMessageBox.warning(self, "Kode Pendaftaran", "Masukkan kode pendaftaran yang diberikan administrator.")
             return
 
         sukses, pesan = database.daftar_guru_baru(data_baru)
