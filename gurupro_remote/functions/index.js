@@ -198,6 +198,8 @@ async function saveAttendance(payload, claims) {
   if (!meeting) fail(400, "Pertemuan wajib diisi.", "invalid_meeting");
   const students = Array.isArray(payload.data_siswa) ? payload.data_siswa : [];
   if (students.length > 1000) fail(413, "Jumlah siswa melebihi batas.", "too_many_students");
+  const materi = cleanString(payload.materi, 300);
+  if (!materi) fail(400, "Materi wajib diisi.", "missing_attendance_material");
   const rosterDocs = (await db.collection("kelas").doc(classId).collection("siswa").get()).docs;
   const rosterByNis = new Map(rosterDocs.map((doc) => {
     const row = doc.data();
@@ -215,12 +217,15 @@ async function saveAttendance(payload, claims) {
       nilai: student.status === "Hadir" ? Math.max(0, Math.min(100, Number(student.nilai) || 0)) : 0,
     };
   });
+  if (safeStudents.length !== rosterByNis.size) {
+    fail(400, "Absensi harus memuat seluruh siswa yang terdaftar di kelas.", "incomplete_attendance_roster");
+  }
   const query = await db.collection("absensi").where("id_kelas", "==", classId).where("pertemuan", "==", meeting).limit(1).get();
   const ref = query.empty ? db.collection("absensi").doc() : query.docs[0].ref;
   await ref.set({
     id_kelas: classId,
-    nama_kelas: cleanString(payload.nama_kelas, 150) || cleanString(cls.nama_kelas, 150),
-    pertemuan: meeting, materi: cleanString(payload.materi, 300),
+    nama_kelas: cleanString(cls.nama_kelas, 150) || cleanString(payload.nama_kelas, 150),
+    pertemuan: meeting, materi,
     catatan_jurnal: cleanString(payload.catatan_jurnal, 2000),
     tanggal: now(), data_siswa: safeStudents,
     sumber: cleanString(payload.sumber, 40) || "Desktop",
