@@ -318,6 +318,7 @@ async function handleAction(action, body, claims, req) {
       const suppliedCode = typeof body.registration_code === "string" ? body.registration_code : "";
       const configuredCode = REGISTRATION_CODE.value();
       const mapel = cleanString(body.mapel, 100);
+      await applyRateLimit("register:" + req.ip, 5, 60 * 60 * 1000);
       const suppliedBuffer = Buffer.from(suppliedCode, "utf8");
       const configuredBuffer = Buffer.from(configuredCode || "", "utf8");
       const codeValid = configuredBuffer.length >= 16 &&
@@ -327,7 +328,6 @@ async function handleAction(action, body, claims, req) {
       if (!name || !/^[0-9]{5,32}$/.test(nip) || password.length < 10 || password.length > 128) {
         fail(400, "Nama, NIP 5–32 digit, dan password 10–128 karakter wajib valid.", "invalid_registration");
       }
-      await applyRateLimit("register:" + req.ip, 5, 60 * 60 * 1000);
       const nipKey = sha256(nip);
       const registryRef = db.collection("nip_registry").doc(nipKey);
       const userRef = db.collection("users").doc();
@@ -375,7 +375,7 @@ async function handleAction(action, body, claims, req) {
     case "auth.refresh": {
       const cookieToken = (req.get("cookie") || "").split(";").map((item) => item.trim())
         .find((item) => item.startsWith("gp_refresh="));
-      const refreshToken = cleanString(body.refreshToken || (cookieToken ? decodeURIComponent(cookieToken.slice("gp_refresh=".length)) : ""), 4096);
+      const refreshToken = cleanString(body.refreshToken || (cookieToken ? cookieToken.slice("gp_refresh=".length) : ""), 4096);
       if (!refreshToken) fail(400, "Refresh token wajib diisi.", "invalid_refresh_token");
       const refreshed = await refreshIdentityToken(refreshToken);
       const decoded = await auth.verifyIdToken(refreshed.idToken, true);
