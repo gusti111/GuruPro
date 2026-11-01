@@ -83,6 +83,8 @@ class PengaturanController:
 
         # 1. Isi Data Teks
         self.main.inputEditNama.setText(user.get('nama_lengkap', ''))
+        self.main.inputEditNIP.setReadOnly(True)
+        self.main.inputEditNIP.setToolTip("NIP merupakan identitas akun dan tidak dapat diubah dari halaman profil.")
         self.main.inputEditNIP.setText(user.get('nip', ''))
         self.main.inputEditMapel.setText(user.get('mapel', ''))
 
@@ -125,10 +127,18 @@ class PengaturanController:
             QMessageBox.warning(self.main, "Peringatan", "Nama dan NIP wajib diisi!")
             return
 
-        # Siapkan data update dasar
+        nip_akun = str(self.main.user.get('nip', '')).strip()
+        if nip_baru.strip() != nip_akun:
+            self.main.inputEditNIP.setText(nip_akun)
+            QMessageBox.warning(
+                self.main, "NIP Tidak Dapat Diubah",
+                "NIP adalah identitas login akun. Perubahan NIP harus dilakukan melalui proses administrasi akun."
+            )
+            return
+
+        # NIP is immutable; only supported profile fields are sent to the API.
         data_update = {
             "nama_lengkap": nama_baru,
-            "nip": nip_baru,
             "mapel": mapel_baru,
             "jabatan": jabatan_baru # <--- FIELD BARU DISIMPAN
         }
