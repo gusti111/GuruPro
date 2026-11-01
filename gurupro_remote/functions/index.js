@@ -62,11 +62,20 @@ async function getUser(uid, claims) {
   return { ref: snap.ref, data: user };
 }
 
+function authServiceUrl(service, path) {
+  const emulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
+  const base = emulatorHost
+    ? "http://" + emulatorHost.replace(/^https?:\\/\\//, "") + "/" + service + ".googleapis.com/v1/"
+    : "https://" + service + ".googleapis.com/v1/";
+  const key = emulatorHost ? "fake-api-key" : API_KEY.value();
+  if (!key) fail(503, "Secret FIREBASE_WEB_API_KEY belum dikonfigurasi.", "auth_exchange_unconfigured");
+  return base + path + "?key=" + encodeURIComponent(key);
+}
+
 async function issueIdentityToken(uid, claims) {
   const customToken = await auth.createCustomToken(uid, claims);
-  const key = API_KEY.value();
-  if (!key) fail(503, "Secret FIREBASE_WEB_API_KEY belum dikonfigurasi.", "auth_exchange_unconfigured");
-  const response = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=" + encodeURIComponent(key), {
+  const url = authServiceUrl("identitytoolkit", "accounts:signInWithCustomToken");
+  const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token: customToken, returnSecureToken: true }),
@@ -80,10 +89,9 @@ async function issueIdentityToken(uid, claims) {
 }
 
 async function refreshIdentityToken(refreshToken) {
-  const key = API_KEY.value();
-  if (!key) fail(503, "Secret FIREBASE_WEB_API_KEY belum dikonfigurasi.", "auth_exchange_unconfigured");
+  const url = authServiceUrl("securetoken", "token");
   const body = new URLSearchParams({ grant_type: "refresh_token", refresh_token: refreshToken });
-  const response = await fetch("https://securetoken.googleapis.com/v1/token?key=" + encodeURIComponent(key), {
+  const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
