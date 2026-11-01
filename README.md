@@ -10,6 +10,9 @@ GuruPro is a teacher-oriented desktop and remote web application for managing pr
 - **Trusted backend:** Firebase Cloud Functions Gen 2 + Firebase Admin SDK.
 - **Data store:** Cloud Firestore, accessed only by the server-side Functions API.
 - **Passwords:** salted PBKDF2-HMAC-SHA256 hashes with legacy plaintext upgrade on successful login.
+- **Session lifecycle:** desktop logout and normal window close revoke the Firebase refresh-token family; paired device sessions are revoked after password changes.
+- **Profile identity:** NIP is immutable in profile settings; only supported text/photo fields can be updated.
+- **Attendance:** roster membership, duplicate NIS, status, and numeric score are validated server-side; the required composite index is versioned in `gurupro_remote/firestore.indexes.json`.
 
 The desktop and browser clients do not initialize Firebase Admin SDK and do not contain a service-account key. They communicate with the trusted API. API requests validate Firebase ID tokens and enforce UID/NIP ownership of classes, students, attendance, and remote sessions.
 
@@ -30,7 +33,7 @@ The desktop and browser clients do not initialize Firebase Admin SDK and do not 
 3. Set `GURUPRO_API_URL` when testing against a local emulator or a non-default deployment.
 4. Run `python main.py`.
 
-The desktop client holds its ID and refresh tokens in memory only. It asks the user to sign in again after the application restarts.
+The desktop client holds its ID and refresh tokens in memory only. It asks the user to sign in again after the application restarts. Explicit logout and normal window close request server-side refresh-token revocation; local credentials are cleared even when the API is unreachable.
 
 ### Firebase backend and PWA
 
