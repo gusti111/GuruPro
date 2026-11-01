@@ -330,22 +330,33 @@ async function handleAction(action, body, claims, req) {
       }
       const nipKey = sha256(nip);
       const registryRef = db.collection("nip_registry").doc(nipKey);
+      const approvalRef = db.collection("approved_nips").doc(nip);
       const userRef = db.collection("users").doc();
       const uid = userRef.id;
-      const registrySnap = await registryRef.get();
-      if (registrySnap.exists) fail(409, "NIP ini sudah terdaftar.", "nip_registered");
       const legacy = await db.collection("users").where("nip", "==", nip).limit(1).get();
       if (!legacy.empty) fail(409, "NIP ini sudah terdaftar.", "nip_registered");
+
+      const approval = await approvalRef.get();
+      if (!approval.exists || approval.data().enabled !== true) {
+        fail(403, "NIP belum disetujui administrator untuk pendaftaran.", "nip_not_approved");
+      }
+
       await auth.createUser({ uid, disabled: false });
       try {
         await db.runTransaction(async (tx) => {
-          const current = await tx.get(registryRef);
-          if (current.exists) fail(409, "NIP ini sudah terdaftar.", "nip_registered");
+          const currentRegistry = await tx.get(registryRef);
+          const currentApproval = await tx.get(approvalRef);
+          if (currentRegistry.exists) fail(409, "NIP ini sudah terdaftar.", "nip_registered");
+          if (!currentApproval.exists || currentApproval.data().enabled !== true) {
+            fail(403, "NIP belum disetujui administrator untuk pendaftaran.", "nip_not_approved");
+          }
           tx.create(registryRef, { uid, created_at: now() });
           tx.create(userRef, {
             uid, nip, nama_lengkap: name, mapel, role: "guru",
             password: hashPassword(password), created_at: now(),
           });
+          // Consume the admin approval exactly once in the same transaction.
+          tx.delete(approvalRef);
         });
       } catch (error) {
         await auth.deleteUser(uid).catch(() => {});
