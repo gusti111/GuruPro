@@ -66,7 +66,7 @@ firebase functions:secrets:set FIREBASE_WEB_API_KEY
 firebase functions:secrets:set GURUPRO_REGISTRATION_CODE
 ```
 
-Retrieve the Web API Key from Firebase Console > Project settings > General. Use a long random enrollment code (at least 16 characters) and give it only to approved teachers. Registration remains disabled until that secret is configured. Never place either secret or a service-account JSON in a client or commit one to Git.
+Retrieve the Web API Key from Firebase Console > Project settings > General. Use a long random enrollment code (at least 16 characters) and give it only to approved teachers. In Firestore Console, create an `approved_nips/{NIP}` document for each teacher and set `enabled: true`; the API consumes that approval when the teacher registers. Registration requires both the secret and the one-time NIP approval. Never place either secret or a service-account JSON in a client or commit one to Git.
 
 A deployment should only happen after a Firestore backup, review of every client that uses the project, and end-to-end emulator testing. The Firestore Rules intentionally deny direct client SDK access. Existing clients that still access Firestore directly will stop working after those rules are deployed.
 
