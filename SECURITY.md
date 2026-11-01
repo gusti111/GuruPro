@@ -1,47 +1,79 @@
-# Security review & remediation status
+# Security architecture and deployment checklist
 
-## Scope
+## Current repository changes
 
-This source review does not inspect live Firebase Console configuration, production Firestore data, deployed Hosting configuration, or credentials.
+The security branch introduces an API-first architecture:
 
-## Confirmed risks in current architecture
+- The desktop application no longer initializes Firebase Admin SDK and no longer reads a service-account JSON file.
+- Desktop login and data operations use the HTTPS Firebase Functions API through `backend/firebase_api.py`.
+- The remote PWA no longer loads the Firebase Firestore SDK or accesses Firestore directly. It calls the same API.
+- Firebase Authentication ID tokens identify a Firebase UID. NIP remains a profile attribute and legacy account lookup key.
+- Firebase Functions owns privileged Firestore operations using server-side Admin SDK credentials supplied by the Firebase runtime.
+- API operations verify the ID token, confirm the user profile, validate client type, and verify class/session ownership before reading or changing protected data.
+- New remote pairing uses a cryptographically random, one-time token in the URL fragment. The server stores only its SHA-256 digest, expires it after 3 minutes, and marks it used atomically.
+- Remote sessions are UID-scoped, expire after 12 hours, and are checked on each API request. Browser refresh credentials are held in a Secure, HttpOnly, SameSite=Strict cookie; the access token is kept in page memory.
+- Passwords use salted PBKDF2-HMAC-SHA256. Legacy plaintext hashes are upgraded only after a successful login; login errors do not disclose whether a NIP exists.
+- Firestore Rules deny all direct client SDK access. Functions Admin SDK access is server-side and bypasses these rules by design.
+- Firestore timestamp values are serialized as ISO-8601 strings for clients.
 
-- The desktop application initializes Firestore using Firebase Admin SDK credentials. Admin SDK access bypasses Firestore Security Rules. A service-account credential distributed with a desktop executable can be extracted and abused.
-- The browser-based remote control reads/writes Firestore directly and does not currently authenticate with Firebase Authentication. A token stored in a URL or browser storage is a bearer credential and must be treated as sensitive.
-- Desktop data operations rely on client-supplied document IDs and NIP values without server-enforced ownership checks. Admin SDK operations are not constrained by Firestore Rules.
-- Password hashing in Firestore is an interim improvement only. It is not a substitute for Firebase Authentication and still leaves credential verification in client code.
-- Desktop and remote web clients have separate trust boundaries; securing one does not secure the other.
+## Files changed
 
-## Changes in branch `security/firebase-auth-hardening`
+- `backend/firebase_api.py`: standard-library HTTPS client for the desktop app.
+- `backend/database.py`: API-backed data-access wrapper; no Firebase Admin SDK.
+- `gurupro_remote/functions/index.js`: server-side authentication, authorization, data and pairing API.
+- `gurupro_remote/functions/package.json`: Functions runtime dependencies.
+- `gurupro_remote/firestore.rules`: fail-closed client rules.
+- `gurupro_remote/firebase.json`: Functions, Hosting API rewrites, Firestore rules, and emulator config.
+- `gurupro_remote/remote-app.js` and `gurupro_remote/index.html`: API-backed PWA client.
+- `gurupro_remote/service-worker.js`: API/auth requests are never cached.
+- Desktop controllers: reports, attendance, and device management now call the API.
+- GitHub Actions: Python compile/unit tests, Firestore Rules Emulator tests, and Node Functions syntax checks.
 
-- Adds `gurupro_remote/firestore.rules` as a fail-closed baseline: all client SDK reads/writes are denied.
-- Configures Firestore Rules and Firebase Emulator Suite in `gurupro_remote/firebase.json`.
-- Adds emulator-based tests that verify unauthenticated and authenticated client requests are denied.
-- Adds Node test tooling under `gurupro_remote/package.json`.
-- These files are not deployed to any Firebase project by this repository change.
+## Firebase project configuration required
 
-## Important: not yet a production-ready migration
+The repository cannot set Firebase Console secrets, IAM policies, billing, API enablement, or deploy the live project. Before deployment:
 
-The current application still uses the legacy client architecture. The fail-closed rules are a protective baseline, not an app-compatible final ruleset. **Do not deploy these rules against the live project before migrating the clients/backend**, because current direct-client reads and writes will stop working.
+1. Confirm that `gurupro-app-bc6cc` is the intended Firebase project and make a Firestore export/backup.
+2. In Firebase Console > Project settings > General, copy the project's Web API key.
+3. From `gurupro_remote/`, configure the Functions secret:
 
-## Required steps before production use
+   ```bash
+   firebase functions:secrets:set FIREBASE_WEB_API_KEY
+   ```
 
-1. Create a trusted backend (Cloud Functions or Cloud Run) that owns privileged Firestore operations. Never bundle a service-account JSON or Admin SDK credential in desktop/mobile/web clients.
-2. Migrate account identities to Firebase Authentication. Keep NIP as a profile attribute; do not use NIP/password pairs as a substitute for Auth UID.
-3. Store authenticated UID as the owner field on each user's classes, attendance, profiles, and sessions. Enforce ownership in Firestore Rules or backend authorization.
-4. Replace direct browser access to privileged collections with authenticated operations. Remote-control sessions must be short-lived, scoped to one user/device, revocable, validated server-side, and must not use bearer tokens in query strings.
-5. Migrate existing accounts/data with a trusted one-time script. Do not silently reset passwords or publish existing data.
-6. Revoke and rotate any service-account key ever included in a distributed build or public repository. Review Firebase IAM audit logs and production rules.
-7. Run emulator tests for unauthenticated, authenticated-owner, authenticated-non-owner, expired-session, and backend/admin scenarios.
-8. Deploy rules/backend only after the migrated clients and backend are verified together.
+   Paste the Web API key when the CLI prompts. It is used server-side for exchanging Firebase custom tokens and refreshing ID tokens.
+4. Confirm Firebase Authentication is enabled and that the project's Identity Toolkit / Secure Token APIs are enabled.
+5. Confirm Cloud Functions Gen 2 deployment prerequisites and billing are enabled for the project.
+6. Review whether any other mobile/web client, integration, scheduled job, or third-party system still accesses Firestore directly. The deny-all rules will block all such client SDK access.
+7. Review Firebase IAM roles and rotate/revoke any service-account key that was ever embedded in a desktop/mobile build or committed to source control. The new client must not ship any Admin SDK key.
 
-## Local validation
+## Deploy only after backup and client review
 
 From `gurupro_remote/`:
 
 ```bash
 npm install
-npm run test:rules
+cd functions && npm install && cd ..
+firebase emulators:start --only auth,firestore,functions,hosting
 ```
 
-The test command runs Firestore Emulator Suite. Java and Firebase CLI dependencies are required. This branch has not been executed in a local runtime; CI is configured to run the tests. No live Firebase deployment or integration test has been performed.
+For a deliberate production deployment after emulator and application-flow testing:
+
+```bash
+firebase deploy --only functions:api,hosting,firestore:rules
+```
+
+The Python desktop client can override the function URL with `GURUPRO_API_URL` if the deployment region/project changes. The default is `https://us-central1-gurupro-app-bc6cc.cloudfunctions.net/api`.
+
+## Remaining external validation
+
+This branch does not claim the live Firebase project has been migrated. Before treating the project as production-ready, verify:
+
+- Successful deployment of the Functions API and Hosting rewrites.
+- Firebase Auth sign-in, token refresh, password change, legacy-account migration, and revocation.
+- Owner/non-owner class access, student import, attendance save/read/delete, and cross-account denial.
+- One-time QR pairing, expired/reused pairing denial, device logout/revocation, and 12-hour expiry.
+- All existing clients have been upgraded before deploying deny-all rules.
+- Backup restore and production IAM/audit log review.
+
+No production deployment, live database migration, real account test, or emulator run is asserted by this source change. CI runs the repository's static/unit and Firestore Rules emulator checks.
