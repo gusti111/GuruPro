@@ -263,20 +263,41 @@ class PengaturanController:
             QMessageBox.critical(self.main, "Error Backup", f"Gagal membuat file Excel: {str(e)}")
 
     def aksi_ganti_password(self):
-        pass_baru, ok = QInputDialog.getText(self.main, "Keamanan", "Masukkan Password Baru:", QLineEdit.EchoMode.Password)
-        
-        if ok and pass_baru:
-            if len(pass_baru) < 6:
-                QMessageBox.warning(self.main, "Peringatan", "Password minimal harus 6 karakter demi keamanan.")
-                return
+        password_lama, ok = QInputDialog.getText(
+            self.main, "Verifikasi", "Masukkan password saat ini:",
+            QLineEdit.EchoMode.Password
+        )
+        if not ok or not password_lama:
+            return
 
-            doc_id = self.main.user.get('doc_id')
-            sukses, pesan = database.update_password(doc_id, pass_baru)
-            
-            if sukses:
-                QMessageBox.information(self.main, "Sukses", "Kata sandi berhasil diubah!")
-            else:
-                QMessageBox.warning(self.main, "Gagal", f"Gagal mengubah kata sandi: {pesan}")
+        pass_baru, ok = QInputDialog.getText(
+            self.main, "Keamanan", "Masukkan password baru (minimal 10 karakter):",
+            QLineEdit.EchoMode.Password
+        )
+        if not ok or not pass_baru:
+            return
+        if len(pass_baru) < 10 or len(pass_baru) > 128:
+            QMessageBox.warning(self.main, "Peringatan", "Password baru harus 10–128 karakter.")
+            return
+
+        konfirmasi, ok = QInputDialog.getText(
+            self.main, "Konfirmasi", "Ulangi password baru:",
+            QLineEdit.EchoMode.Password
+        )
+        if not ok or konfirmasi != pass_baru:
+            QMessageBox.warning(self.main, "Peringatan", "Konfirmasi password tidak cocok.")
+            return
+
+        doc_id = self.main.user.get('doc_id')
+        sukses, pesan = database.update_password(doc_id, pass_baru, password_lama)
+        if sukses:
+            QMessageBox.information(
+                self.main, "Sukses",
+                pesan + "\\nSesi login akan diakhiri demi keamanan."
+            )
+            self.main.close()
+        else:
+            QMessageBox.warning(self.main, "Gagal", f"Gagal mengubah kata sandi: {pesan}")
 
     def aksi_reset_aplikasi(self):
         tanya = QMessageBox.question(self.main, "Reset Form", "Apakah Anda ingin mengosongkan formulir input profil?",
