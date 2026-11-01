@@ -115,6 +115,21 @@ async function ensureAuthUser(uid, nip, role) {
   await db.collection("users").doc(uid).set({ uid, nip, role }, { merge: true });
 }
 
+async function revokeAndDeleteAuthUser(uid) {
+  if (!uid) return;
+  try {
+    await auth.revokeRefreshTokens(uid);
+  } catch (error) {
+    if (error.code === "auth/user-not-found") return;
+    throw error;
+  }
+  try {
+    await auth.deleteUser(uid);
+  } catch (error) {
+    if (error.code !== "auth/user-not-found") throw error;
+  }
+}
+
 async function applyRateLimit(key, limit = 8, windowMs = 10 * 60 * 1000) {
   const ref = db.collection("_rate_limits").doc(sha256(key));
   const cutoff = Date.now() - windowMs;
@@ -196,7 +211,8 @@ async function saveAttendance(payload, claims) {
   const meeting = cleanString(payload.pertemuan, 80);
   const { data: cls } = await ownedClass(classId, claims);
   if (!meeting) fail(400, "Pertemuan wajib diisi.", "invalid_meeting");
-  const students = Array.isArray(payload.data_siswa) ? payload.data_siswa : [];
+  if (!Array.isArray(payload.data_siswa)) fail(400, "Daftar siswa absensi tidak valid.", "invalid_attendance_roster");
+  const students = payload.data_siswa;
   if (students.length > 1000) fail(413, "Jumlah siswa melebihi batas.", "too_many_students");
   const materi = cleanString(payload.materi, 300);
   if (!materi) fail(400, "Materi wajib diisi.", "missing_attendance_material");
@@ -208,15 +224,24 @@ async function saveAttendance(payload, claims) {
   if (rosterByNis.size === 0) fail(400, "Kelas belum memiliki siswa.", "empty_class_roster");
   const seenNis = new Set();
   const safeStudents = students.map((student) => {
+    if (!student || typeof student !== "object" || Array.isArray(student)) {
+      fail(400, "Data siswa absensi tidak valid.", "invalid_attendance_roster");
+    }
     const nis = cleanString(String(student.nis || ""), 40);
     if (!nis || !rosterByNis.has(nis) || seenNis.has(nis)) fail(400, "Daftar siswa absensi tidak valid.", "invalid_attendance_roster");
+    const status = cleanString(student.status, 20);
+    if (!["Hadir", "Sakit", "Izin", "Alpa"].includes(status)) {
+      fail(400, "Status kehadiran siswa tidak valid.", "invalid_attendance_status");
+    }
+    let nilai = 0;
+    if (status === "Hadir") {
+      nilai = Number(student.nilai);
+      if (!Number.isFinite(nilai) || !Number.isInteger(nilai) || nilai < 0 || nilai > 100) {
+        fail(400, "Nilai siswa harus berupa angka bulat 0–100.", "invalid_attendance_score");
+      }
+    }
     seenNis.add(nis);
-    return {
-      nis,
-      nama: rosterByNis.get(nis),
-      status: ["Hadir", "Sakit", "Izin", "Alpa"].includes(student.status) ? student.status : "Alpa",
-      nilai: student.status === "Hadir" ? Math.max(0, Math.min(100, Number(student.nilai) || 0)) : 0,
-    };
+    return { nis, nama: rosterByNis.get(nis), status, nilai };
   });
   if (safeStudents.length !== rosterByNis.size) {
     fail(400, "Absensi harus memuat seluruh siswa yang terdaftar di kelas.", "incomplete_attendance_roster");
@@ -374,7 +399,10 @@ async function handleAction(action, body, claims, req) {
       const nip = cleanString(body.nip, 32);
       const password = typeof body.password === "string" ? body.password : "";
       if (!nip || !password || password.length > 128) fail(400, "NIP dan password wajib diisi.", "invalid_credentials");
-      await applyRateLimit("login:" + req.ip + ":" + nip, 8);
+      await Promise.all([
+        applyRateLimit("login-ip:" + req.ip, 60),
+        applyRateLimit("login-nip:" + sha256(nip), 8),
+      ]);
       const matches = await db.collection("users").where("nip", "==", nip).limit(2).get();
       if (matches.size !== 1) fail(401, "NIP atau kata sandi salah.", "invalid_credentials");
       const userDoc = matches.docs[0];
@@ -419,6 +447,11 @@ async function handleAction(action, body, claims, req) {
   if (!claims) fail(401, "Autentikasi diperlukan.", "unauthenticated");
 
   switch (action) {
+    case "auth.logout": {
+      await requireDesktop(claims);
+      await auth.revokeRefreshTokens(claims.uid);
+      return { success: true };
+    }
     case "profile.get":
       return publicProfile((await getUser(claims.uid, claims)).data, claims.uid);
     case "profile.update": {
@@ -562,11 +595,7 @@ async function handleAction(action, body, claims, req) {
       changes.last_update = now();
       await ref.update(changes);
       if (["disconnected_by_host", "disconnected"].includes(changes.status)) {
-        const deviceUid = snap.data().device_uid;
-        if (deviceUid) {
-          await auth.revokeRefreshTokens(deviceUid).catch(() => {});
-          await auth.deleteUser(deviceUid).catch(() => {});
-        }
+        await revokeAndDeleteAuthUser(snap.data().device_uid);
       }
       return { success: true };
     }
@@ -575,12 +604,9 @@ async function handleAction(action, body, claims, req) {
       const ref = db.collection("remote_sessions").doc(cleanString(body.sessionId, 128));
       const snap = await ref.get();
       if (!snap.exists || ((snap.data().uid ? snap.data().uid !== (claims.ownerUid || claims.uid) : snap.data().nip !== claims.nip))) fail(404, "Sesi tidak ditemukan.", "session_not_found");
-      const deviceUid = snap.data().device_uid;
+      await ref.update({ status: "disconnected_by_host", last_update: now() });
+      await revokeAndDeleteAuthUser(snap.data().device_uid);
       await ref.delete();
-      if (deviceUid) {
-        await auth.revokeRefreshTokens(deviceUid).catch(() => {});
-        await auth.deleteUser(deviceUid).catch(() => {});
-      }
       return { success: true };
     }
     case "remote.pollCommands": {
@@ -616,8 +642,7 @@ async function handleAction(action, body, claims, req) {
     case "remote.logout": {
       await requireRemote(claims);
       await db.collection("remote_sessions").doc(claims.sid).update({ status: "disconnected", last_update: now() });
-      await auth.revokeRefreshTokens(claims.uid).catch(() => {});
-      await auth.deleteUser(claims.uid).catch(() => {});
+      await revokeAndDeleteAuthUser(claims.uid);
       return { success: true };
     }
     case "remote.classes": {
@@ -666,12 +691,13 @@ exports.cleanupExpiredRemoteSessions = require("firebase-functions/v2/scheduler"
   for (const doc of disconnectedSessions.docs) sessions.set(doc.id, doc);
 
   for (const doc of sessions.values()) {
-    const deviceUid = doc.data().device_uid;
-    if (deviceUid) {
-      await auth.revokeRefreshTokens(deviceUid).catch(() => {});
-      await auth.deleteUser(deviceUid).catch(() => {});
+    try {
+      await revokeAndDeleteAuthUser(doc.data().device_uid);
+      await doc.ref.delete();
+    } catch (error) {
+      // Keep the disconnected/expired document so the next scheduled run retries cleanup.
+      console.error("Remote session cleanup deferred:", doc.id, error);
     }
-    await doc.ref.delete();
   }
 
   for (let i = 0; i < expiredPairings.docs.length; i += 400) {
@@ -701,9 +727,10 @@ exports.api = onRequest({
   if (req.method === "OPTIONS") return res.status(204).send("");
   if (req.method !== "POST") return res.status(405).json({ error: "Method tidak diizinkan.", code: "method_not_allowed" });
   if (!req.is("application/json")) return res.status(415).json({ error: "Gunakan application/json.", code: "invalid_content_type" });
+  let action = "";
   try {
     const body = req.body || {};
-    const action = cleanString(body.action, 80);
+    action = cleanString(body.action, 80);
     if (!action) fail(400, "Aksi API wajib diisi.", "missing_action");
     let claims = null;
     if (!["auth.login", "auth.register", "auth.refresh", "remote.redeem"].includes(action)) claims = await bearerClaims(req);
@@ -728,6 +755,9 @@ exports.api = onRequest({
     return res.status(200).json({ data: serializeForClient(result) });
   } catch (error) {
     const status = Number(error.status) || 500;
+    if ((action === "auth.refresh" || action === "remote.logout") && [400, 401].includes(status)) {
+      res.set("Set-Cookie", "gp_refresh=; HttpOnly; Secure; SameSite=Strict; Path=/api; Max-Age=0");
+    }
     if (status >= 500) console.error("GuruPro API error:", error);
     return res.status(status).json({
       error: status >= 500 ? "Terjadi kesalahan pada server." : error.message,
