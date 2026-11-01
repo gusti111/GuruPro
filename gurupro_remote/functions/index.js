@@ -144,8 +144,9 @@ async function bearerClaims(req, expectedClient) {
     const sid = cleanString(decoded.sid, 128);
     if (!sid) fail(403, "Sesi perangkat tidak valid.", "invalid_remote_session");
     const session = await db.collection("remote_sessions").doc(sid).get();
-    if (!session.exists || session.data().uid !== decoded.uid || session.data().status !== "connected") {
-      fail(401, "Sesi perangkat telah dihentikan.", "remote_session_ended");
+    if (!session.exists || session.data().uid !== decoded.uid || session.data().status !== "connected" ||
+        (session.data().expires_at && session.data().expires_at.toMillis() < Date.now())) {
+      fail(401, "Sesi perangkat telah dihentikan atau kedaluwarsa.", "remote_session_ended");
     }
   }
   return decoded;
@@ -221,6 +222,7 @@ async function createPairing(claims) {
     mapel: cleanString(profile.mapel, 100) || "-",
     connected_device: "-", custom_name: "", command: "none", last_command: "none",
     created_at: now(), last_update: now(),
+    expires_at: admin.firestore.Timestamp.fromMillis(Date.now() + 12 * 60 * 60 * 1000),
   });
   return { sessionId, pairUrl: HOSTING_ORIGIN + "/#pair=" + encodeURIComponent(pairingToken), expiresIn: 180 };
 }
@@ -305,9 +307,21 @@ async function handleAction(action, body, claims, req) {
       return { ...identity, profile: publicProfile(user, userDoc.id) };
     }
     case "auth.refresh": {
-      const refreshToken = cleanString(body.refreshToken, 4096);
+      const cookieToken = (req.get("cookie") || "").split(";").map((item) => item.trim())
+        .find((item) => item.startsWith("gp_refresh="));
+      const refreshToken = cleanString(body.refreshToken || (cookieToken ? decodeURIComponent(cookieToken.slice("gp_refresh=".length)) : ""), 4096);
       if (!refreshToken) fail(400, "Refresh token wajib diisi.", "invalid_refresh_token");
-      return await refreshIdentityToken(refreshToken);
+      const refreshed = await refreshIdentityToken(refreshToken);
+      const decoded = await auth.verifyIdToken(refreshed.idToken, true);
+      if (decoded.client === "remote") {
+        const sid = cleanString(decoded.sid, 128);
+        const session = await db.collection("remote_sessions").doc(sid).get();
+        if (!session.exists || session.data().uid !== decoded.uid || session.data().status !== "connected" ||
+            (session.data().expires_at && session.data().expires_at.toMillis() < Date.now())) {
+          fail(401, "Sesi perangkat telah dihentikan atau kedaluwarsa.", "remote_session_ended");
+        }
+      }
+      return refreshed;
     }
     default:
       break;
@@ -491,6 +505,7 @@ async function handleAction(action, body, claims, req) {
     case "remote.logout":
       await requireRemote(claims);
       await db.collection("remote_sessions").doc(claims.sid).update({ status: "disconnected", last_update: now() });
+      await auth.revokeRefreshTokens(claims.uid);
       return { success: true };
     case "remote.classes": {
       await requireRemote(claims);
@@ -546,6 +561,21 @@ exports.api = onRequest({
     let claims = null;
     if (!["auth.login", "auth.register", "auth.refresh", "remote.redeem"].includes(action)) claims = await bearerClaims(req);
     const result = await handleAction(action, body, claims, req);
+    if (action === "remote.redeem" && result && result.refreshToken) {
+      res.set("Set-Cookie", "gp_refresh=" + encodeURIComponent(result.refreshToken) + "; HttpOnly; Secure; SameSite=Strict; Path=/api; Max-Age=43200");
+      const { refreshToken, ...safeResult } = result;
+      return res.status(200).json({ data: safeResult });
+    }
+    if (action === "auth.refresh" && result && result.refreshToken) {
+      if (req.get("origin")) {
+        res.set("Set-Cookie", "gp_refresh=" + encodeURIComponent(result.refreshToken) + "; HttpOnly; Secure; SameSite=Strict; Path=/api; Max-Age=43200");
+        const { refreshToken, ...safeResult } = result;
+        return res.status(200).json({ data: safeResult });
+      }
+    }
+    if (action === "remote.logout") {
+      res.set("Set-Cookie", "gp_refresh=; HttpOnly; Secure; SameSite=Strict; Path=/api; Max-Age=0");
+    }
     return res.status(200).json({ data: result });
   } catch (error) {
     const status = Number(error.status) || 500;
