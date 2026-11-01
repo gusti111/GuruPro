@@ -22,5 +22,5 @@ jobs:
           python-version: "3.11"
       - name: Compile desktop Python source
         run: python -m compileall -q backend controllers main.py
-      - name: Run password utility tests
+      - name: Run security and password tests
         run: python -m unittest discover -s tests -v
