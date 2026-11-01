@@ -76,7 +76,7 @@ A deployment should only happen after a Firestore backup, review of every client
 When ready to deploy:
 
 ```bash
-firebase deploy --only functions,hosting,firestore:rules
+firebase deploy --only functions,hosting,firestore:rules,firestore:indexes
 ```
 
 The desktop API endpoint defaults to `https://us-central1-gurupro-app-bc6cc.cloudfunctions.net/api`; set `GURUPRO_API_URL` to override it.
