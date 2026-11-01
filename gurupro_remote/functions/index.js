@@ -252,7 +252,7 @@ async function createPairing(claims) {
     mapel: cleanString(profile.mapel, 100) || "-",
     connected_device: "-", custom_name: "", command: "none", last_command: "none",
     created_at: now(), last_update: now(),
-    expires_at: admin.firestore.Timestamp.fromMillis(Date.now() + 12 * 60 * 60 * 1000),
+    expires_at: admin.firestore.Timestamp.fromMillis(Date.now() + 3 * 60 * 1000),
   });
   return { sessionId, pairUrl: HOSTING_ORIGIN + "/#pair=" + encodeURIComponent(pairingToken), expiresIn: 180 };
 }
@@ -298,6 +298,7 @@ async function redeemPairing(pairingToken, deviceName) {
       connected_device: cleanString(deviceName, 60) || "Perangkat",
       custom_name: cleanString(deviceName, 60) || "Perangkat",
       last_update: now(),
+      expires_at: admin.firestore.Timestamp.fromMillis(Date.now() + 12 * 60 * 60 * 1000),
     });
     const identity = await issueIdentityToken(deviceUid);
     return { ...identity, sessionId: pair.session_id, profile: publicProfile(user, pair.uid) };
@@ -543,6 +544,13 @@ async function handleAction(action, body, claims, req) {
       if (body.command === "none") changes.command = "none";
       changes.last_update = now();
       await ref.update(changes);
+      if (["disconnected_by_host", "disconnected"].includes(changes.status)) {
+        const deviceUid = snap.data().device_uid;
+        if (deviceUid) {
+          await auth.revokeRefreshTokens(deviceUid).catch(() => {});
+          await auth.deleteUser(deviceUid).catch(() => {});
+        }
+      }
       return { success: true };
     }
     case "remote.session.delete": {
@@ -550,7 +558,12 @@ async function handleAction(action, body, claims, req) {
       const ref = db.collection("remote_sessions").doc(cleanString(body.sessionId, 128));
       const snap = await ref.get();
       if (!snap.exists || ((snap.data().uid ? snap.data().uid !== (claims.ownerUid || claims.uid) : snap.data().nip !== claims.nip))) fail(404, "Sesi tidak ditemukan.", "session_not_found");
+      const deviceUid = snap.data().device_uid;
       await ref.delete();
+      if (deviceUid) {
+        await auth.revokeRefreshTokens(deviceUid).catch(() => {});
+        await auth.deleteUser(deviceUid).catch(() => {});
+      }
       return { success: true };
     }
     case "remote.pollCommands": {
@@ -622,6 +635,34 @@ async function handleAction(action, body, claims, req) {
       fail(404, "Aksi API tidak dikenal.", "unknown_action");
   }
 }
+
+exports.cleanupExpiredRemoteSessions = require("firebase-functions/v2/scheduler").onSchedule("every 60 minutes", async () => {
+  const cutoff = now();
+  const [expiredSessions, disconnectedSessions, expiredPairings] = await Promise.all([
+    db.collection("remote_sessions").where("expires_at", "<=", cutoff).get(),
+    db.collection("remote_sessions").where("status", "in", ["disconnected", "disconnected_by_host"]).get(),
+    db.collection("remote_pairings").where("expires_at", "<=", cutoff).get(),
+  ]);
+
+  const sessions = new Map();
+  for (const doc of expiredSessions.docs) sessions.set(doc.id, doc);
+  for (const doc of disconnectedSessions.docs) sessions.set(doc.id, doc);
+
+  for (const doc of sessions.values()) {
+    const deviceUid = doc.data().device_uid;
+    if (deviceUid) {
+      await auth.revokeRefreshTokens(deviceUid).catch(() => {});
+      await auth.deleteUser(deviceUid).catch(() => {});
+    }
+    await doc.ref.delete();
+  }
+
+  for (let i = 0; i < expiredPairings.docs.length; i += 400) {
+    const batch = db.batch();
+    expiredPairings.docs.slice(i, i + 400).forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+  }
+});
 
 exports.api = onRequest({
   region: REGION, timeoutSeconds: 60, memory: "512MiB", secrets: [API_KEY, REGISTRATION_CODE], cors: false,
