@@ -62,7 +62,8 @@ class SecurityArchitectureTests(unittest.TestCase):
         self.assertIn("tx.delete(approvalRef)", functions)
         self.assertIn("auth.setCustomUserClaims(deviceUid, claims)", functions)
         self.assertIn("cleanupExpiredRemoteSessions", functions)
-        self.assertIn("auth.deleteUser(deviceUid)", functions)
+        self.assertIn("revokeAndDeleteAuthUser(deviceUid)", functions)
+        self.assertIn("await auth.deleteUser(uid)", functions)
 
     def test_desktop_logout_revokes_server_refresh_tokens(self):
         functions = self.read("gurupro_remote/functions/index.js")
