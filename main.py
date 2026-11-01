@@ -142,11 +142,21 @@ class RegisterWindow(QMainWindow):
             "nama_lengkap": self.inputNamaReg.text(),
             "nip": self.inputNipReg.text(),
             "mapel": self.inputMapelReg.text(),
-            "password": self.inputPassReg.text()
+            "password": self.inputPassReg.text(),
+            "registration_code": self.inputEnrollmentCodeReg.text()
         }
 
         if not data_baru["nama_lengkap"] or not data_baru["nip"]:
             QMessageBox.warning(self, "Data Kurang", "Mohon lengkapi data profil!")
+            return
+        if not data_baru["nip"].isdigit() or not (5 <= len(data_baru["nip"]) <= 32):
+            QMessageBox.warning(self, "NIP Tidak Valid", "NIP harus terdiri dari 5–32 digit angka.")
+            return
+        if not (10 <= len(data_baru["password"]) <= 128):
+            QMessageBox.warning(self, "Password Tidak Valid", "Password harus terdiri dari 10–128 karakter.")
+            return
+        if not data_baru["registration_code"]:
+            QMessageBox.warning(self, "Kode Pendaftaran", "Masukkan kode pendaftaran yang diberikan administrator.")
             return
 
         sukses, pesan = database.daftar_guru_baru(data_baru)
@@ -177,6 +187,7 @@ class DashboardWindow(QMainWindow):
         except: pass
         
         self.user = user_data
+        self._session_closed = False
         
         # Tampilkan Nama di Sidebar
         self.lblNamaUser.setText(self.user.get('nama_lengkap', 'Guru'))
@@ -258,9 +269,23 @@ class DashboardWindow(QMainWindow):
 
     def logout(self):
         if QMessageBox.question(self, "Keluar", "Yakin ingin keluar?") == QMessageBox.StandardButton.Yes:
+            sukses, pesan = database.logout()
+            self._session_closed = True
+            if not sukses:
+                QMessageBox.warning(self, "Logout Sebagian", pesan)
             self.login = LoginWindow()
             self.login.show()
             self.close()
+
+    def closeEvent(self, event):
+        # Revoke the desktop refresh-token family even when the window close
+        # control is used instead of the sidebar logout button.
+        if not getattr(self, "_session_closed", False):
+            sukses, pesan = database.logout()
+            self._session_closed = True
+            if not sukses:
+                print(f"Peringatan logout: {pesan}")
+        event.accept()
 
 # ==========================================================
 # EKSEKUSI UTAMA

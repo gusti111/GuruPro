@@ -181,6 +181,16 @@ QPushButton#btnKembaliLogin:hover {
         </widget>
        </item>
        <item>
+        <widget class="QLineEdit" name="inputEnrollmentCodeReg">
+         <property name="echoMode">
+          <enum>QLineEdit::EchoMode::Password</enum>
+         </property>
+         <property name="placeholderText">
+          <string>Kode Pendaftaran dari Admin</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="btnDaftar">
          <property name="text">
           <string>Buat Akun</string>

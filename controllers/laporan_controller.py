@@ -3,7 +3,6 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from backend import database
 from datetime import datetime
-from google.cloud.firestore_v1.base_query import FieldFilter
 import pandas as pd
 import os
 import platform
@@ -110,11 +109,10 @@ class LaporanController:
         
         try:
             # 1. AMBIL MASTER SISWA
-            siswa_docs = database.db.collection("kelas").document(id_kelas).collection("siswa").stream()
+            siswa_docs = database.ambil_siswa_per_kelas(id_kelas)
             
             rekap_siswa = {} 
-            for doc in siswa_docs:
-                s = doc.to_dict()
+            for s in siswa_docs:
                 nis = str(s.get('nis', ''))
                 nama = s.get('nama', 'Tanpa Nama')
                 rekap_siswa[nis] = {
@@ -126,21 +124,24 @@ class LaporanController:
             jumlah_siswa = len(rekap_siswa)
 
             # 2. AMBIL DATA ABSENSI & HITUNG
-            docs = database.db.collection("absensi").where(filter=FieldFilter("id_kelas", "==", id_kelas)).stream()
+            docs = database.ambil_rekap_absensi(id_kelas)
             total_pertemuan_valid = 0
 
-            for doc in docs:
-                data = doc.to_dict()
+            for data in docs:
                 tanggal_ts = data.get('tanggal')
                 
                 # Filter Bulan
                 if filter_bulan != "Semua Bulan" and tanggal_ts:
                     try:
-                        if hasattr(tanggal_ts, 'month'): 
-                            bulan_data = tanggal_ts.month
-                        else: 
-                            dt = datetime.fromtimestamp(tanggal_ts.timestamp())
+                        if isinstance(tanggal_ts, str):
+                            dt = datetime.fromisoformat(tanggal_ts.replace("Z", "+00:00"))
                             bulan_data = dt.month
+                        elif hasattr(tanggal_ts, 'month'):
+                            bulan_data = tanggal_ts.month
+                        elif hasattr(tanggal_ts, 'timestamp'):
+                            bulan_data = datetime.fromtimestamp(tanggal_ts.timestamp()).month
+                        else:
+                            continue
                         
                         if bulan_data != map_bulan_angka[filter_bulan]:
                             continue 

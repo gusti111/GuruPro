@@ -2,7 +2,6 @@ from PyQt6.QtWidgets import QTableWidgetItem, QComboBox, QMessageBox, QHeaderVie
 from PyQt6.QtCore import Qt
 from backend import database
 from datetime import datetime
-from google.cloud.firestore_v1.base_query import FieldFilter
 
 # PASTIKAN NAMA CLASS INI PERSIS 'MengajarController' (Huruf Besar M)
 class MengajarController:
@@ -104,17 +103,11 @@ class MengajarController:
         print(f"🔍 Mengecek data: {self.nama_kelas_aktif} - {pertemuan_dipilih}")
 
         try:
-            # Query ke Firebase
-            docs = database.db.collection('absensi')\
-                .where(filter=FieldFilter("id_kelas", "==", self.id_kelas_aktif))\
-                .where(filter=FieldFilter("pertemuan", "==", pertemuan_dipilih))\
-                .stream()
-
+            # Query melalui backend yang memverifikasi kepemilikan kelas.
+            data = database.ambil_absensi_pertemuan(self.id_kelas_aktif, pertemuan_dipilih)
             ketemu = False
-            for doc in docs:
-                # DATA DITEMUKAN (Mode Edit)
-                data = doc.to_dict()
-                self.id_dokumen_aktif = doc.id  # Simpan ID untuk update nanti
+            if data:
+                self.id_dokumen_aktif = data.get("id")
                 
                 # Load Materi & Catatan
                 if hasattr(self.main, 'inputMateri'): 
@@ -126,10 +119,9 @@ class MengajarController:
                 list_siswa = data.get('data_siswa', []) or data.get('detail', [])
                 self.render_tabel_dengan_data(list_siswa)
                 
-                print(f"✅ Data lama ditemukan! ID: {doc.id}")
+                print(f"✅ Data lama ditemukan! ID: {self.id_dokumen_aktif}")
                 self.main.btnSimpanAbsensi.setText("Update Absensi")
                 ketemu = True
-                break 
 
             if not ketemu:
                 # DATA BARU (Mode Create)
@@ -278,23 +270,15 @@ class MengajarController:
             "pertemuan": self.main.comboPertemuan.currentText(),
             "materi": materi,
             "catatan_jurnal": catatan,
-            "tanggal": database.firestore.SERVER_TIMESTAMP,
             "data_siswa": detail_absensi
         }
 
         try:
-            if self.id_dokumen_aktif:
-                # MODE UPDATE (Timpa data lama)
-                database.db.collection('absensi').document(self.id_dokumen_aktif).set(paket_data)
-                pesan = f"Data pertemuan '{materi}' berhasil DIPERBARUI!"
-            else:
-                # MODE CREATE (Buat baru)
-                _, doc_ref = database.db.collection('absensi').add(paket_data)
-                self.id_dokumen_aktif = doc_ref.id # Set ID agar next save jadi update
-                pesan = f"Data pertemuan '{materi}' berhasil DISIMPAN!"
-                self.main.btnSimpanAbsensi.setText("Update Absensi")
-
+            sukses, pesan = database.simpan_absensi_ke_db(paket_data)
+            if not sukses:
+                raise RuntimeError(pesan)
             QMessageBox.information(self.main, "Berhasil", pesan)
+            self.cek_data_pertemuan_lama()
             
         except Exception as e:
             print(f"Error simpan: {e}")
