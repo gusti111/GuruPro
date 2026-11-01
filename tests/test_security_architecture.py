@@ -119,6 +119,17 @@ class SecurityArchitectureTests(unittest.TestCase):
         self.assertIn("student.nilai === null || student.nilai === undefined", source)
         self.assertIn("Nilai siswa wajib diisi untuk status Hadir.", source)
 
+    def test_profile_api_rejects_non_text_and_bounds_profile_fields(self):
+        source = self.read("gurupro_remote/functions/index.js")
+        profile_update = source.split('case "profile.update":', 1)[1].split('case "profile.password":', 1)[0]
+        self.assertIn('typeof value !== "string"', profile_update)
+        self.assertIn("nama_lengkap: 150", profile_update)
+        self.assertIn("mapel: 100", profile_update)
+
+    def test_profile_reset_preserves_immutable_nip(self):
+        source = self.read("controllers/pengaturan_controller.py")
+        self.assertIn("self.main.inputEditNIP.setText(str(self.main.user.get('nip', '')))", source)
+
     def test_firestore_rules_fail_closed_for_client_sdk(self):
         rules = self.read("gurupro_remote/firestore.rules")
         self.assertIn("allow read, write: if false;", rules)
