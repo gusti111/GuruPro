@@ -2,8 +2,12 @@
   "name": "gurupro-functions",
   "private": true,
   "main": "index.js",
-  "engines": { "node": "20" },
-  "scripts": { "test": "node --test test/*.test.js" },
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "test": "node --check index.js"
+  },
   "dependencies": {
     "firebase-admin": "^12.7.0",
     "firebase-functions": "^6.1.1"
