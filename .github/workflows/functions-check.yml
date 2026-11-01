@@ -7,10 +7,14 @@ on:
       - security/firebase-auth-hardening
     paths:
       - "gurupro_remote/functions/**"
+      - "gurupro_remote/remote-app.js"
+      - "remote_web/remote-app.js"
       - ".github/workflows/functions-check.yml"
   pull_request:
     paths:
       - "gurupro_remote/functions/**"
+      - "gurupro_remote/remote-app.js"
+      - "remote_web/remote-app.js"
       - ".github/workflows/functions-check.yml"
 
 jobs:
@@ -24,7 +28,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
+      - run: npm install --no-audit --no-fund
       - run: npm test
       - name: Check browser client syntax
         run: node --check ../remote-app.js
