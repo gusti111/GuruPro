@@ -1,0 +1,28 @@
+name: GuruPro Functions checks
+
+on:
+  push:
+    branches:
+      - main
+      - security/firebase-auth-hardening
+    paths:
+      - "gurupro_remote/functions/**"
+      - ".github/workflows/functions-check.yml"
+  pull_request:
+    paths:
+      - "gurupro_remote/functions/**"
+      - ".github/workflows/functions-check.yml"
+
+jobs:
+  functions-source:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gurupro_remote/functions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npm test
