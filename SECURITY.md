@@ -43,7 +43,14 @@ The repository cannot set Firebase Console secrets, IAM policies, billing, API e
    firebase functions:secrets:set GURUPRO_REGISTRATION_CODE
    ```
 
-   Paste the Web API key when prompted for the first secret. For the registration secret, use a long random value (at least 16 characters) and share it only with authorized teachers. It is required for new-account creation, so unauthenticated visitors cannot reserve arbitrary NIP values. Neither value belongs in Git or a client build. FIREBASE_WEB_API_KEY is used server-side to exchange Firebase custom tokens and refresh ID tokens.
+   Paste the Web API key when prompted for the first secret. For the registration secret, use a long random value (at least 16 characters) and share it only with authorized teachers. Neither value belongs in Git or a client build. FIREBASE_WEB_API_KEY is used server-side to exchange Firebase custom tokens and refresh ID tokens.
+
+   Before a teacher registers, an administrator must also pre-approve that exact NIP in Firestore Console:
+   - Create/open the `approved_nips` collection.
+   - Add a document whose document ID is the teacher's exact NIP.
+   - Add the Boolean field `enabled` with value `true`.
+
+   Registration requires both the enrollment secret and an enabled approval document. The API consumes (deletes) the approval document atomically when the account is created, so a second account cannot reuse that approval. This collection is managed by project administrators only; the client Firestore Rules deny all access.
 4. Confirm Firebase Authentication is enabled and that the project's Identity Toolkit / Secure Token APIs are enabled.
 5. Confirm Cloud Functions Gen 2 deployment prerequisites and billing are enabled for the project.
 6. Review whether any other mobile/web client, integration, scheduled job, or third-party system still accesses Firestore directly. The deny-all rules will block all such client SDK access.
