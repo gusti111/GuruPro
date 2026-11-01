@@ -479,20 +479,27 @@ async function handleAction(action, body, claims, req) {
     case "remote.sessions.list": {
       await requireDesktop(claims);
       const snap = await db.collection("remote_sessions").where("nip", "==", claims.nip).get();
-      return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })).filter((session) => !session.uid || session.uid === claims.uid);
+      const visible = snap.docs.filter((doc) => !doc.data().uid || doc.data().uid === claims.uid);
+      const legacy = visible.filter((doc) => !doc.data().uid);
+      for (let i = 0; i < legacy.length; i += 400) {
+        const batch = db.batch();
+        legacy.slice(i, i + 400).forEach((doc) => batch.update(doc.ref, { uid: claims.uid, migrated_owner_at: now() }));
+        await batch.commit();
+      }
+      return visible.map((doc) => ({ id: doc.id, ...doc.data(), uid: claims.uid }));
     }
     case "remote.session.get": {
       await requireDesktop(claims);
       const ref = db.collection("remote_sessions").doc(cleanString(body.sessionId, 128));
       const snap = await ref.get();
-      if (!snap.exists || (snap.data().uid !== claims.uid && snap.data().nip !== claims.nip)) return null;
+      if (!snap.exists || ((snap.data().uid ? snap.data().uid !== claims.uid : snap.data().nip !== claims.nip))) return null;
       return { id: snap.id, ...snap.data() };
     }
     case "remote.session.update": {
       await requireDesktop(claims);
       const ref = db.collection("remote_sessions").doc(cleanString(body.sessionId, 128));
       const snap = await ref.get();
-      if (!snap.exists || (snap.data().uid !== claims.uid && snap.data().nip !== claims.nip)) fail(404, "Sesi tidak ditemukan.", "session_not_found");
+      if (!snap.exists || ((snap.data().uid ? snap.data().uid !== claims.uid : snap.data().nip !== claims.nip))) fail(404, "Sesi tidak ditemukan.", "session_not_found");
       const changes = {};
       if (typeof body.custom_name === "string") changes.custom_name = cleanString(body.custom_name, 60);
       if (["disconnected_by_host", "disconnected"].includes(body.status)) changes.status = body.status;
@@ -506,7 +513,7 @@ async function handleAction(action, body, claims, req) {
       await requireDesktop(claims);
       const ref = db.collection("remote_sessions").doc(cleanString(body.sessionId, 128));
       const snap = await ref.get();
-      if (!snap.exists || (snap.data().uid !== claims.uid && snap.data().nip !== claims.nip)) fail(404, "Sesi tidak ditemukan.", "session_not_found");
+      if (!snap.exists || ((snap.data().uid ? snap.data().uid !== claims.uid : snap.data().nip !== claims.nip))) fail(404, "Sesi tidak ditemukan.", "session_not_found");
       await ref.delete();
       return { success: true };
     }
@@ -576,6 +583,10 @@ async function handleAction(action, body, claims, req) {
 exports.api = onRequest({
   region: REGION, timeoutSeconds: 60, memory: "512MiB", secrets: [API_KEY], cors: false,
 }, async (req, res) => {
+  res.set("Cache-Control", "no-store, max-age=0");
+  res.set("Pragma", "no-cache");
+  res.set("X-Content-Type-Options", "nosniff");
+  res.set("Referrer-Policy", "no-referrer");
   const origin = req.get("origin");
   if (origin && ALLOWED_ORIGINS.has(origin)) {
     res.set("Access-Control-Allow-Origin", origin);
