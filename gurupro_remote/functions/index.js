@@ -622,7 +622,9 @@ exports.api = onRequest({
       return res.status(200).json({ data: safeResult });
     }
     if (action === "auth.refresh" && result && result.refreshToken) {
-      if (req.get("origin")) {
+      const cookieRefresh = (req.get("cookie") || "").split(";")
+        .some((item) => item.trim().startsWith("gp_refresh="));
+      if (cookieRefresh || req.get("origin")) {
         res.set("Set-Cookie", "gp_refresh=" + encodeURIComponent(result.refreshToken) + "; HttpOnly; Secure; SameSite=Strict; Path=/api; Max-Age=43200");
         const { refreshToken, ...safeResult } = result;
         return res.status(200).json({ data: safeResult });
