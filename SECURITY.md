@@ -11,7 +11,8 @@ The security branch introduces an API-first architecture:
 - Firebase Functions owns privileged Firestore operations using server-side Admin SDK credentials supplied by the Firebase runtime.
 - API operations verify the ID token, confirm the user profile, validate client type, and verify class/session ownership before reading or changing protected data.
 - New remote pairing uses a cryptographically random, one-time token in the URL fragment. The server stores only its SHA-256 digest, expires it after 3 minutes, and marks it used atomically.
-- Remote sessions are UID-scoped, expire after 12 hours, and are checked on each API request. Browser refresh credentials are held in a Secure, HttpOnly, SameSite=Strict cookie; the access token is kept in page memory.
+- Every paired remote device receives its own Firebase Auth UID, persistently bound to the teacher owner and one session. Refreshing the token does not remove this binding. Remote sessions expire after 12 hours and are checked on each API request. Browser refresh credentials are held in a Secure, HttpOnly, SameSite=Strict cookie; the access token is kept in page memory.
+- A scheduled cleanup removes expired pairings and disconnected/expired device sessions, and revokes/deletes their Firebase Auth identities.
 - Passwords use salted PBKDF2-HMAC-SHA256. Legacy plaintext hashes are upgraded only after a successful login; login errors do not disclose whether a NIP exists.
 - Firestore Rules deny all direct client SDK access. Functions Admin SDK access is server-side and bypasses these rules by design.
 - Firestore timestamp values are serialized as ISO-8601 strings for clients.
