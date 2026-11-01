@@ -130,6 +130,11 @@ class SecurityArchitectureTests(unittest.TestCase):
         source = self.read("controllers/pengaturan_controller.py")
         self.assertIn("self.main.inputEditNIP.setText(str(self.main.user.get('nip', '')))", source)
 
+    def test_mobile_attendance_does_not_coerce_blank_scores_to_zero(self):
+        source = self.read("gurupro_remote/remote-app.js")
+        self.assertIn('scoreText === "" ? Number.NaN : Number(scoreText)', source)
+        self.assertIn("Number.isInteger(score)", source)
+
     def test_firestore_rules_fail_closed_for_client_sdk(self):
         rules = self.read("gurupro_remote/firestore.rules")
         self.assertIn("allow read, write: if false;", rules)
