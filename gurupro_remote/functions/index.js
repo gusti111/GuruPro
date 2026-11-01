@@ -184,9 +184,9 @@ async function listClasses(claims) {
   const snap = await db.collection("kelas").where("nip_guru", "==", claims.nip).get();
   const visible = snap.docs.filter((doc) => !doc.data().uid || doc.data().uid === claims.uid);
   const legacy = visible.filter((doc) => !doc.data().uid);
-  if (legacy.length) {
+  for (let i = 0; i < legacy.length; i += 400) {
     const batch = db.batch();
-    legacy.forEach((doc) => batch.update(doc.ref, { uid: claims.uid, migrated_owner_at: now() }));
+    legacy.slice(i, i + 400).forEach((doc) => batch.update(doc.ref, { uid: claims.uid, migrated_owner_at: now() }));
     await batch.commit();
   }
   return visible.map((doc) => ({ id: doc.id, ...doc.data(), uid: claims.uid }));
@@ -205,16 +205,19 @@ async function saveAttendance(payload, claims) {
   if (!meeting) fail(400, "Pertemuan wajib diisi.", "invalid_meeting");
   const students = Array.isArray(payload.data_siswa) ? payload.data_siswa : [];
   if (students.length > 1000) fail(413, "Jumlah siswa melebihi batas.", "too_many_students");
-  const roster = await (await db.collection("kelas").doc(classId).collection("siswa").get()).docs;
-  const allowedNis = new Set(roster.map((doc) => String(doc.data().nis || doc.id)));
+  const rosterDocs = (await db.collection("kelas").doc(classId).collection("siswa").get()).docs;
+  const rosterByNis = new Map(rosterDocs.map((doc) => {
+    const row = doc.data();
+    return [String(row.nis || doc.id), cleanString(row.nama, 150)];
+  }));
   const seenNis = new Set();
   const safeStudents = students.map((student) => {
     const nis = cleanString(String(student.nis || ""), 40);
-    if (!nis || !allowedNis.has(nis) || seenNis.has(nis)) fail(400, "Daftar siswa absensi tidak valid.", "invalid_attendance_roster");
+    if (!nis || !rosterByNis.has(nis) || seenNis.has(nis)) fail(400, "Daftar siswa absensi tidak valid.", "invalid_attendance_roster");
     seenNis.add(nis);
     return {
       nis,
-      nama: cleanString(student.nama, 150),
+      nama: rosterByNis.get(nis),
       status: ["Hadir", "Sakit", "Izin", "Alpa"].includes(student.status) ? student.status : "Alpa",
       nilai: Math.max(0, Math.min(100, Number(student.nilai) || 0)),
     };
