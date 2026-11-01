@@ -50,6 +50,22 @@ class FirebaseApiClientTests(unittest.TestCase):
         self.assertTrue(firebase_api.has_session())
         self.assertEqual(firebase_api._refresh_token, "refresh-token")
 
+    def test_logout_calls_server_and_clears_tokens(self):
+        firebase_api.set_tokens("active-id-token", "active-refresh-token")
+        with patch.object(firebase_api, "api_call", return_value={"success": True}) as call:
+            firebase_api.logout()
+        call.assert_called_once_with("auth.logout")
+        self.assertFalse(firebase_api.has_session())
+        self.assertIsNone(firebase_api._refresh_token)
+
+    def test_logout_clears_local_tokens_when_server_is_unavailable(self):
+        firebase_api.set_tokens("active-id-token", "active-refresh-token")
+        with patch.object(firebase_api, "api_call", side_effect=ApiError("offline", status=503)):
+            with self.assertRaises(ApiError):
+                firebase_api.logout()
+        self.assertFalse(firebase_api.has_session())
+        self.assertIsNone(firebase_api._refresh_token)
+
     def test_api_call_fails_without_login(self):
         with self.assertRaises(ApiError) as context:
             firebase_api.api_call("profile.get")
