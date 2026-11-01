@@ -118,6 +118,7 @@ async function ensureAuthUser(uid, nip, role) {
     await auth.createUser({ uid, disabled: false });
   }
   await auth.setCustomUserClaims(uid, { nip, role });
+  await db.collection("users").doc(uid).set({ uid, nip, role }, { merge: true });
 }
 
 async function applyRateLimit(key, limit = 8, windowMs = 10 * 60 * 1000) {
@@ -306,6 +307,8 @@ async function handleAction(action, body, claims, req) {
       const identity = await issueIdentityToken(userDoc.id, { nip, role, client: "desktop" });
       return { ...identity, profile: publicProfile(user, userDoc.id) };
     }
+    case "remote.redeem":
+      return await redeemPairing(cleanString(body.pairingToken, 200), cleanString(body.deviceName, 60));
     case "auth.refresh": {
       const cookieToken = (req.get("cookie") || "").split(";").map((item) => item.trim())
         .find((item) => item.startsWith("gp_refresh="));
@@ -489,9 +492,6 @@ async function handleAction(action, body, claims, req) {
       }
       return items;
     }
-    case "remote.redeem":
-      if (claims) fail(400, "Aksi pairing harus dilakukan tanpa sesi lama.", "already_authenticated");
-      return await redeemPairing(cleanString(body.pairingToken, 200), cleanString(body.deviceName, 60));
     case "remote.session": {
       await requireRemote(claims);
       const session = await db.collection("remote_sessions").doc(claims.sid).get();
