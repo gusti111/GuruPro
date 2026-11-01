@@ -105,7 +105,7 @@
     setText("p-nip", profile.nip || session.nip || "-");
     setText("p-sid", sessionId ? sessionId.slice(0, 8) + "…" : "-");
     const photo = profile.foto_base64;
-    if (photo && typeof photo === "string" && photo.startsWith("data:image/") && photo.length < 1500000) {
+    if (photo && typeof photo === "string" && /^data:image\/(jpeg|png|webp);base64,/.test(photo) && photo.length < 700000) {
       $("p-img").src = photo;
     } else if ($("p-img")) {
       $("p-img").removeAttribute("src");
