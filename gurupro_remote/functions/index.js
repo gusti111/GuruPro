@@ -235,6 +235,10 @@ async function saveAttendance(payload, claims) {
     }
     let nilai = 0;
     if (status === "Hadir") {
+      if (student.nilai === null || student.nilai === undefined ||
+          (typeof student.nilai === "string" && !student.nilai.trim())) {
+        fail(400, "Nilai siswa wajib diisi untuk status Hadir.", "invalid_attendance_score");
+      }
       nilai = Number(student.nilai);
       if (!Number.isFinite(nilai) || !Number.isInteger(nilai) || nilai < 0 || nilai > 100) {
         fail(400, "Nilai siswa harus berupa angka bulat 0–100.", "invalid_attendance_score");
@@ -553,8 +557,9 @@ async function handleAction(action, body, claims, req) {
         }
         const nis = cleanString(String(row.nis || ""), 40);
         const nama = cleanString(row.nama, 150);
-        const gender = cleanString(row.gender, 20);
-        if (!nis || !nama || !["L", "P", "Laki-laki", "Perempuan"].includes(gender)) {
+        const genderInput = cleanString(row.gender, 20).toLocaleLowerCase("id-ID");
+        const gender = ({ l: "L", p: "P", "laki-laki": "L", "laki laki": "L", perempuan: "P" })[genderInput];
+        if (!nis || !nama || !gender) {
           fail(400, "NIS, nama, dan jenis kelamin setiap siswa wajib valid.", "invalid_student_row");
         }
         if (seenNis.has(nis)) fail(400, "Terdapat NIS ganda di file impor.", "duplicate_student_nis");
