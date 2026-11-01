@@ -13,6 +13,13 @@ on:
       - "gurupro_remote/tests/**"
       - ".github/workflows/firestore-rules-tests.yml"
   pull_request:
+    paths:
+      - "gurupro_remote/firestore.rules"
+      - "gurupro_remote/firebase.json"
+      - "gurupro_remote/package.json"
+      - "gurupro_remote/package-lock.json"
+      - "gurupro_remote/tests/**"
+      - ".github/workflows/firestore-rules-tests.yml"
 
 jobs:
   rules-tests:
