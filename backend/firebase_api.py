@@ -102,9 +102,12 @@ def _refresh() -> bool:
             return False
         set_tokens(result["idToken"], result.get("refreshToken", refresh_token))
         return True
-    except ApiError:
-        clear_session()
-        return False
+    except ApiError as exc:
+        if exc.status in (401, 403):
+            clear_session()
+            return False
+        # A transient server/network error must not erase a still-valid refresh token.
+        raise
 
 
 def api_call(action: str, **payload: Any) -> Any:
