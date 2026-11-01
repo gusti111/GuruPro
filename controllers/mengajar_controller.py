@@ -122,7 +122,6 @@ class MengajarController:
                 print(f"✅ Data lama ditemukan! ID: {self.id_dokumen_aktif}")
                 self.main.btnSimpanAbsensi.setText("Update Absensi")
                 ketemu = True
-                break 
 
             if not ketemu:
                 # DATA BARU (Mode Create)
