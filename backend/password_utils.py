@@ -22,7 +22,7 @@ def verify_password(password: str, stored_value: str) -> tuple[bool, bool]:
     if not isinstance(password, str) or not isinstance(stored_value, str):
         return False, False
     if not stored_value.startswith(ALGORITHM + "$"):
-        return hmac.compare_digest(password, stored_value), True
+        return hmac.compare_digest(password.encode("utf-8"), stored_value.encode("utf-8")), True
     try:
         algorithm, iterations_text, salt_hex, digest_hex = stored_value.split("$", 3)
         iterations = int(iterations_text)
