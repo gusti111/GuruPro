@@ -86,7 +86,7 @@ firebase emulators:start --only auth,firestore,functions,hosting
 For a deliberate production deployment after emulator and application-flow testing:
 
 ```bash
-firebase deploy --only functions,hosting,firestore:rules,firestore:indexes
+firebase deploy --only functions,hosting,firestore
 ```
 
 The Python desktop client can override the function URL with `GURUPRO_API_URL` if the deployment region/project changes. The default is `https://us-central1-gurupro-app-bc6cc.cloudfunctions.net/api`.
