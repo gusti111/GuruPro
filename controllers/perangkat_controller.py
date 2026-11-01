@@ -95,7 +95,7 @@ class PerangkatController:
 
             # [PENTING] Lazy Loading: Jangan load data di sini agar start-up cepat
             # self.muat_daftar_perangkat() 
-            self.timer_ui_refresh.start(5000) 
+            self.timer_ui_refresh.start(15000) 
 
         except Exception as e:
             print(f"⚠️ Error Setup Perangkat: {e}")
@@ -338,7 +338,7 @@ class PerangkatController:
         self.generate_qr_session()
         self.timer_cek = QTimer(self.dialog_qr)
         self.timer_cek.timeout.connect(self.cek_status_connect_dialog)
-        self.timer_cek.start(1500) 
+        self.timer_cek.start(3000) 
         self.dialog_qr.exec()
 
     def generate_qr_session(self):
