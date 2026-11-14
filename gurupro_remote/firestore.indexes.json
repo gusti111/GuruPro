@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "absensi",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "id_kelas", "order": "ASCENDING" },
+        { "fieldPath": "pertemuan", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

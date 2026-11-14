@@ -83,6 +83,8 @@ class PengaturanController:
 
         # 1. Isi Data Teks
         self.main.inputEditNama.setText(user.get('nama_lengkap', ''))
+        self.main.inputEditNIP.setReadOnly(True)
+        self.main.inputEditNIP.setToolTip("NIP merupakan identitas akun dan tidak dapat diubah dari halaman profil.")
         self.main.inputEditNIP.setText(user.get('nip', ''))
         self.main.inputEditMapel.setText(user.get('mapel', ''))
 
@@ -125,10 +127,18 @@ class PengaturanController:
             QMessageBox.warning(self.main, "Peringatan", "Nama dan NIP wajib diisi!")
             return
 
-        # Siapkan data update dasar
+        nip_akun = str(self.main.user.get('nip', '')).strip()
+        if nip_baru.strip() != nip_akun:
+            self.main.inputEditNIP.setText(nip_akun)
+            QMessageBox.warning(
+                self.main, "NIP Tidak Dapat Diubah",
+                "NIP adalah identitas login akun. Perubahan NIP harus dilakukan melalui proses administrasi akun."
+            )
+            return
+
+        # NIP is immutable; only supported profile fields are sent to the API.
         data_update = {
             "nama_lengkap": nama_baru,
-            "nip": nip_baru,
             "mapel": mapel_baru,
             "jabatan": jabatan_baru # <--- FIELD BARU DISIMPAN
         }
@@ -263,20 +273,41 @@ class PengaturanController:
             QMessageBox.critical(self.main, "Error Backup", f"Gagal membuat file Excel: {str(e)}")
 
     def aksi_ganti_password(self):
-        pass_baru, ok = QInputDialog.getText(self.main, "Keamanan", "Masukkan Password Baru:", QLineEdit.EchoMode.Password)
-        
-        if ok and pass_baru:
-            if len(pass_baru) < 6:
-                QMessageBox.warning(self.main, "Peringatan", "Password minimal harus 6 karakter demi keamanan.")
-                return
+        password_lama, ok = QInputDialog.getText(
+            self.main, "Verifikasi", "Masukkan password saat ini:",
+            QLineEdit.EchoMode.Password
+        )
+        if not ok or not password_lama:
+            return
 
-            doc_id = self.main.user.get('doc_id')
-            sukses, pesan = database.update_password(doc_id, pass_baru)
-            
-            if sukses:
-                QMessageBox.information(self.main, "Sukses", "Kata sandi berhasil diubah!")
-            else:
-                QMessageBox.warning(self.main, "Gagal", f"Gagal mengubah kata sandi: {pesan}")
+        pass_baru, ok = QInputDialog.getText(
+            self.main, "Keamanan", "Masukkan password baru (minimal 10 karakter):",
+            QLineEdit.EchoMode.Password
+        )
+        if not ok or not pass_baru:
+            return
+        if len(pass_baru) < 10 or len(pass_baru) > 128:
+            QMessageBox.warning(self.main, "Peringatan", "Password baru harus 10–128 karakter.")
+            return
+
+        konfirmasi, ok = QInputDialog.getText(
+            self.main, "Konfirmasi", "Ulangi password baru:",
+            QLineEdit.EchoMode.Password
+        )
+        if not ok or konfirmasi != pass_baru:
+            QMessageBox.warning(self.main, "Peringatan", "Konfirmasi password tidak cocok.")
+            return
+
+        doc_id = self.main.user.get('doc_id')
+        sukses, pesan = database.update_password(doc_id, pass_baru, password_lama)
+        if sukses:
+            QMessageBox.information(
+                self.main, "Sukses",
+                pesan + "\\nSesi login akan diakhiri demi keamanan."
+            )
+            self.main.close()
+        else:
+            QMessageBox.warning(self.main, "Gagal", f"Gagal mengubah kata sandi: {pesan}")
 
     def aksi_reset_aplikasi(self):
         tanya = QMessageBox.question(self.main, "Reset Form", "Apakah Anda ingin mengosongkan formulir input profil?",
@@ -284,7 +315,7 @@ class PengaturanController:
         
         if tanya == QMessageBox.StandardButton.Yes:
             self.main.inputEditNama.clear()
-            self.main.inputEditNIP.clear()
+            self.main.inputEditNIP.setText(str(self.main.user.get('nip', '')))
             self.main.inputEditMapel.clear()
             # Reset Combo Jabatan
             if self.comboJabatan: self.comboJabatan.setCurrentIndex(0)

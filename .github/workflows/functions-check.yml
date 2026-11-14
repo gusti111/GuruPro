@@ -1,0 +1,36 @@
+name: GuruPro Functions checks
+
+on:
+  push:
+    branches:
+      - main
+      - security/firebase-auth-hardening
+    paths:
+      - "gurupro_remote/functions/**"
+      - "gurupro_remote/remote-app.js"
+      - "remote_web/remote-app.js"
+      - ".github/workflows/functions-check.yml"
+  pull_request:
+    paths:
+      - "gurupro_remote/functions/**"
+      - "gurupro_remote/remote-app.js"
+      - "remote_web/remote-app.js"
+      - ".github/workflows/functions-check.yml"
+
+jobs:
+  functions-source:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gurupro_remote/functions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - name: Check browser client syntax
+        run: node --check ../remote-app.js
+      - name: Check alternate browser client syntax
+        run: node --check ../../remote_web/remote-app.js

@@ -1,0 +1,13 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Fail-closed baseline: deny all client SDK access until Firebase Auth,
+    // ownership fields, and tested per-collection rules are implemented.
+    // Admin SDK service accounts bypass these rules and must never be bundled
+    // in desktop/mobile/web clients.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

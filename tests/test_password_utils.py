@@ -22,6 +22,10 @@ class PasswordUtilsTests(unittest.TestCase):
         self.assertEqual(verify_password("legacy", "legacy"), (True, True))
         self.assertEqual(verify_password("wrong", "legacy"), (False, True))
 
+    def test_unicode_legacy_password_is_compared_safely(self):
+        self.assertEqual(verify_password("sandi-öä漢字", "sandi-öä漢字"), (True, True))
+        self.assertEqual(verify_password("wrong", "sandi-öä漢字"), (False, True))
+
     def test_malformed_hash_fails_closed(self):
         self.assertEqual(verify_password("anything", "pbkdf2_sha256$broken"), (False, False))
 
