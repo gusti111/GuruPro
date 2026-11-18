@@ -45,6 +45,22 @@ The repository emphasizes a trusted server boundary: desktop and browser clients
 
 The PWA and desktop client are untrusted clients. Authorization and data validation must remain enforced by the backend and Firestore Rules.
 
+## Teacher workflow and trusted data flow
+
+```mermaid
+flowchart TD
+    A["Teacher opens desktop or PWA client"] --> B["Authenticate with Firebase"]
+    B --> C["Obtain Firebase ID token"]
+    C --> D["Call trusted Cloud Functions API"]
+    D --> E["Validate identity and authorization"]
+    E --> F{"Request allowed?"}
+    F -->|No| G["Return authorization error"]
+    F -->|Yes| H["Validate ownership and business rules"]
+    H --> I["Read or update Cloud Firestore"]
+    I --> J["Return response to client"]
+    J --> K["Update classes, schedules, attendance, or reports"]
+```
+
 ## Technology
 
 | Layer | Technology |
