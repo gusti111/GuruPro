@@ -1,92 +1,155 @@
-# GuruPro
+<div align="center">
 
-GuruPro is a teacher-oriented desktop and remote web application for managing profiles, classes, students, teaching sessions, attendance, reports, and paired devices.
+# GURUPRO
+
+**Teacher Attendance & Class Management System**
+
+A desktop-first school administration application with a browser-based companion experience.
+
+</div>
+
+---
+
+## Overview
+
+GuruPro is a school-management project designed to organize teacher workflows around classes, teaching schedules, attendance, reports, and paired devices. The primary desktop client is built with Python and PyQt6. A separate browser-oriented PWA and Firebase backend are maintained in the gurupro_remote directory.
+
+The repository emphasizes a trusted server boundary: desktop and browser clients authenticate with Firebase Authentication and communicate with the backend API rather than accessing Firestore through the Firebase Admin SDK from client code.
+
+## Product areas
+
+- Teacher sign-in and profile-oriented access.
+- Class and student management.
+- Teaching schedules and session records.
+- Attendance entry and reporting.
+- Device pairing and remote access flows.
+- Browser-based PWA experience.
+- Server-side validation for identity, ownership, attendance records, and session operations.
 
 ## Architecture
 
-- **Desktop:** Python + PyQt6.
-- **Remote PWA:** HTML, CSS, and JavaScript.
-- **Authentication:** Firebase Authentication ID tokens. NIP remains a profile identifier; it is not an authorization token.
-- **Trusted backend:** Firebase Cloud Functions Gen 2 + Firebase Admin SDK.
-- **Data store:** Cloud Firestore, accessed only by the server-side Functions API.
-- **Passwords:** salted PBKDF2-HMAC-SHA256 hashes with legacy plaintext upgrade on successful login.
-- **Session lifecycle:** desktop logout and normal window close revoke the Firebase refresh-token family; paired device sessions are revoked after password changes.
-- **Profile identity:** NIP is immutable in profile settings; only supported text/photo fields can be updated.
-- **Attendance:** roster membership, duplicate NIS, status, and numeric score are validated server-side; the required composite index is versioned in `gurupro_remote/firestore.indexes.json`.
+    Desktop client (Python / PyQt6)
+            │
+            │ Firebase ID token
+            ▼
+    Firebase Cloud Functions API
+            │
+            ├── Authentication and authorization
+            ├── UID / NIP ownership checks
+            ├── Class and student operations
+            ├── Attendance validation
+            └── Firestore access through Admin SDK
+                    │
+                    ▼
+                Cloud Firestore
 
-The desktop and browser clients do not initialize Firebase Admin SDK and do not contain a service-account key. They communicate with the trusted API. API requests validate Firebase ID tokens and enforce UID/NIP ownership of classes, students, attendance, and remote sessions.
+The PWA and desktop client are untrusted clients. Authorization and data validation must remain enforced by the backend and Firestore Rules.
 
-## Repository layout
+## Technology
 
-- `backend/firebase_api.py`: HTTPS client used by the desktop app.
-- `backend/database.py`: desktop data access facade; calls the API.
-- `controllers/`: desktop application controllers.
-- `gurupro_remote/`: Firebase Hosting PWA, Firestore rules, emulator config, and Functions backend.
-- `tests/`: Python unit tests.
+| Layer | Technology |
+| --- | --- |
+| Desktop | Python, PyQt6 |
+| Browser client | HTML, CSS, JavaScript, PWA |
+| Authentication | Firebase Authentication |
+| Backend | Firebase Cloud Functions, Firebase Admin SDK |
+| Database | Cloud Firestore |
+| Password handling | PBKDF2-HMAC-SHA256 utilities |
+| Testing | Python unittest, Node.js tests, Firestore Rules tests |
+| Hosting configuration | Firebase Hosting |
 
-## Local setup
+## Getting started
 
 ### Desktop client
 
-1. Use Python 3.10+.
-2. Install the project's desktop dependencies (PyQt6, pandas, openpyxl, qrcode, and any optional reporting/export packages used by your local build).
-3. Set `GURUPRO_API_URL` when testing against a local emulator or a non-default deployment.
-4. Run `python main.py`.
+Use Python 3.11 or newer for the CI-aligned test environment. Install the desktop dependencies required by the source, including PyQt6 and the libraries used for reporting, QR generation, and API communication.
 
-The desktop client holds its ID and refresh tokens in memory only. It asks the user to sign in again after the application restarts. Explicit logout and normal window close request server-side refresh-token revocation; local credentials are cleared even when the API is unreachable.
+    git clone https://github.com/gusti111/GuruPro.git
+    cd GuruPro
 
-### Firebase backend and PWA
+    python -m venv .venv
 
-From `gurupro_remote/`:
+Windows:
 
-```bash
-npm install
-cd functions
-npm install
-cd ..
-firebase emulators:start --only auth,firestore,functions,hosting
-```
+    .venv\Scripts\activate
 
-The Functions runtime uses Node.js 22. The Firestore Rules test command is:
+macOS / Linux:
 
-```bash
-npm run test:rules
-```
+    source .venv/bin/activate
 
-The Functions source check is:
+The repository currently does not provide a pinned root requirements.txt. Install the dependencies required by your local environment before launching:
 
-```bash
-cd functions
-npm test
-```
+    python main.py
 
-## Firebase configuration
+### Firebase project
 
-The default Firebase project alias is `gurupro-app-bc6cc`. Set the Web API Key and admin-issued registration code as Functions secrets before deployment:
+The Firebase application and Functions configuration is maintained in gurupro_remote/.
 
-```bash
-firebase functions:secrets:set FIREBASE_WEB_API_KEY
-firebase functions:secrets:set GURUPRO_REGISTRATION_CODE
-```
+    cd gurupro_remote
+    npm install
 
-Retrieve the Web API Key from Firebase Console > Project settings > General. Use a long random enrollment code (at least 16 characters) and give it only to approved teachers. In Firestore Console, create an `approved_nips/{NIP}` document for each teacher and set `enabled: true`; the API consumes that approval when the teacher registers. Registration requires both the secret and the one-time NIP approval. Never place either secret or a service-account JSON in a client or commit one to Git.
+    cd functions
+    npm install
 
-A deployment should only happen after a Firestore backup, review of every client that uses the project, and end-to-end emulator testing. The Firestore Rules intentionally deny direct client SDK access. Existing clients that still access Firestore directly will stop working after those rules are deployed.
+Configure the Firebase project, secrets, approved teacher records, and emulator environment before testing authentication or deployment. See SECURITY.md for the full security and deployment checklist.
 
-When ready to deploy:
+## Configuration
 
-```bash
-firebase deploy --only functions,hosting,firestore
-```
+The current default project alias is gurupro-app-bc6cc. Configure the required secrets through Firebase Functions Secret Manager rather than placing them in browser or desktop source:
 
-The desktop API endpoint defaults to `https://us-central1-gurupro-app-bc6cc.cloudfunctions.net/api`; set `GURUPRO_API_URL` to override it.
+    firebase functions:secrets:set FIREBASE_WEB_API_KEY
+    firebase functions:secrets:set GURUPRO_REGISTRATION_CODE
 
-## Security and project status
+Registration uses an approved NIP record and a one-time administrative registration code. Never commit service-account JSON or production secrets.
 
-See [SECURITY.md](SECURITY.md) for the threat review, migration design, required Firebase Console configuration, deployment gates, and remaining production validation.
+## Verification
 
-This repository contains source-level changes and CI checks. It does not assert that the live Firebase project has been deployed, its rules changed, credentials rotated, or real account/data migration completed.
+Run the Python test suite:
+
+    python -m unittest discover -s tests -v
+
+Compile the relevant desktop and backend Python source:
+
+    python -m compileall -q backend controllers main.py
+
+From gurupro_remote/functions, run:
+
+    npm test
+
+From gurupro_remote, run the Firestore Rules tests:
+
+    npm run test:rules
+
+These commands describe the repository's available checks; this README does not claim that a live Firebase deployment or production migration has been completed.
+
+## Repository structure
+
+    GuruPro/
+    ├── backend/             # Desktop API client and data access helpers
+    ├── controllers/         # Desktop workflow controllers
+    ├── ui/                  # Qt Designer interface files
+    ├── tests/               # Python unit and security tests
+    ├── gurupro_remote/
+    │   ├── functions/       # Trusted backend API
+    │   ├── firestore.rules
+    │   ├── firestore.indexes.json
+    │   └── PWA and Hosting assets
+    ├── remote_web/          # Browser client assets
+    ├── SECURITY.md
+    └── main.py
+
+## Security and deployment
+
+- Review SECURITY.md before using real teacher or student records.
+- Back up Firestore before any rules or data migration.
+- Confirm that all deployed clients use the trusted API before denying direct client Firestore access.
+- Test enrollment, ownership boundaries, token revocation, and attendance validation in the Firebase Emulator Suite.
+- Treat a passing unit test as a code-level check, not as proof of production security.
+
+## Project status
+
+A source repository with desktop, browser, backend, security, and test components. Live deployment, production data migration, credential rotation, and end-to-end acceptance must be verified independently.
 
 ## Author
 
-Gusty Faqikh
+**Gusty Faqikh** · [GitHub](https://github.com/gusti111)
